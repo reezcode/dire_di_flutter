@@ -1,0 +1,19 @@
+targets:
+  $default:
+    builders:
+      dire_di|di_generator:
+        enabled: true
+        generate_for:
+          include:
+            - lib/**.dart
+            - example/**.dart
+
+builders:
+  di_generator:
+    target: ":di_generator"
+    import: "package:dire_di/builder.dart"
+    builder_factories: ["diBuilder"]
+    build_extensions: { ".dart": [".dire_di.dart"] }
+    auto_apply: dependents
+    build_to: source
+    applies_builders: ["source_gen|combining_builder"]

@@ -1,0 +1,15 @@
+name: dire_di_example
+description: Example application demonstrating Dire DI features
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  dire_di:
+    path: ../
+
+dev_dependencies:
+  lints: ^3.0.0
+  build_runner: ^2.4.7

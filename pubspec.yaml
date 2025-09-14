@@ -1,0 +1,33 @@
+name: dire_di_flutter
+description: A Spring-like dependency injection framework for Dart with code generation for Flutter compatibility.
+version: 1.0.0
+homepage: https://github.com/reezcode/dire_di_flutter
+repository: https://github.com/reezcode/dire_di_flutter
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  # Core dependencies for dependency injection
+  collection: ^1.17.0
+  meta: ^1.9.0
+  # Code generation dependencies
+  build: ^2.4.1
+  source_gen: ^1.4.0
+  analyzer: ^6.0.0
+
+dev_dependencies:
+  lints: ^3.0.0
+  test: ^1.24.0
+  build_runner: ^2.4.7
+
+# Dart analyzer configuration
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+# This package provides Spring-like dependency injection for Dart

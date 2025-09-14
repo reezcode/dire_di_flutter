@@ -1,7 +1,7 @@
 targets:
   $default:
     builders:
-      dire_di|di_generator:
+      dire_di_flutter|di_generator:
         enabled: true
         generate_for:
           include:
@@ -11,7 +11,7 @@ targets:
 builders:
   di_generator:
     target: ":di_generator"
-    import: "package:dire_di/builder.dart"
+    import: "package:dire_di_flutter/builder.dart"
     builder_factories: ["diBuilder"]
     build_extensions: { ".dart": [".dire_di.dart"] }
     auto_apply: dependents

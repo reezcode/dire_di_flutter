@@ -1,4 +1,4 @@
-import 'package:dire_di/dire_di.dart';
+import 'package:dire_di_flutter/dire_di.dart';
 
 // Import the generated registration file
 import 'autowired_example.dire_di.dart';

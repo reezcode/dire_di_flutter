@@ -1,4 +1,5 @@
 import 'package:dire_di_flutter/dire_di.dart';
+
 import '../services/database_service.dart';
 
 @Repository()

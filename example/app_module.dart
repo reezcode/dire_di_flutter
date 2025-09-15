@@ -29,10 +29,10 @@ Future<void> main() async {
   container.registerGeneratedDependencies();
 
   print(
-      'Step 1: All dependencies registered from consolidated generated code...',);
+      'Step 1: All dependencies registered from consolidated generated code...');
   print('Step 2: Components were found in multiple files:');
   print(
-      '  - services/database_service.dart (DatabaseService, ConfigurationService)',);
+      '  - services/database_service.dart (DatabaseService, ConfigurationService)');
   print('  - repositories/user_repository.dart (UserRepository)');
   print('  - services/user_service.dart (UserService)');
   print('  - controllers/user_controller.dart (UserController)');

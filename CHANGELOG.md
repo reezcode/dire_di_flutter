@@ -1,4 +1,4 @@
-## 2.0.0
+## 2.1.0
 
 ### 🎉 Major Features
 
@@ -33,6 +33,7 @@
 ### 🚀 Migration Guide
 
 **Before (multiple files):**
+
 ```dart
 // Each file had its own .dire_di.dart
 import 'service1.dire_di.dart';
@@ -42,6 +43,7 @@ container.registerGeneratedDependencies(); // Multiple calls needed
 ```
 
 **After (consolidated):**
+
 ```dart
 @DireDiEntryPoint()
 class AppModule {}
@@ -56,7 +58,7 @@ This package now fully supports Android/iOS through mirrors-free code generation
 
 ---
 
-## 1.0.2
+## 2.1.0
 
 - Spring-like dependency injection for Dart
 - Auto-wiring with @Autowired annotation

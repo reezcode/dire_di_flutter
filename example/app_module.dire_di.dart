@@ -27,6 +27,7 @@ extension GeneratedDependencies on DireContainer {
         instance.configService = get<ConfigurationService>();
         return instance;
       },
+      scope: ScopeType.singleton,
     );
 
     // Register UserController
@@ -36,16 +37,19 @@ extension GeneratedDependencies on DireContainer {
         instance.userService = get<UserService>();
         return instance;
       },
+      scope: ScopeType.singleton,
     );
 
     // Register DatabaseService
     register<DatabaseService>(
-      DatabaseService.new,
+      () => DatabaseService(),
+      scope: ScopeType.singleton,
     );
 
     // Register ConfigurationService
     register<ConfigurationService>(
-      ConfigurationService.new,
+      () => ConfigurationService(),
+      scope: ScopeType.singleton,
     );
 
     // Register UserService
@@ -55,6 +59,7 @@ extension GeneratedDependencies on DireContainer {
         instance.userRepository = get<UserRepository>();
         return instance;
       },
+      scope: ScopeType.singleton,
     );
   }
 }

@@ -85,10 +85,23 @@ mixin DiCore {
     return _globalContainer!;
   }
 
+  static DireContainer get currentContainer {
+    if (!_isInitialized || _globalContainer == null) {
+      throw StateError(
+        'DireContainer not initialized. Either:\n'
+        '1. Call "await DiCore.initialize()" in your main() method, or\n'
+        '2. Use "await getAsync<T>()" for automatic initialization.\n'
+        '3. In Flutter widgets, prefer using getAsync<T>() in initState().',
+      );
+    }
+    return _globalContainer!;
+  }
+
   /// Initialize the global container with generated dependencies.
   /// This method is called automatically on first access.
-  static Future<void> _initializeContainer(
-      [void Function(DireContainer)? registerCallback,]) async {
+  static Future<void> _initializeContainer([
+    void Function(DireContainer)? registerCallback,
+  ]) async {
     if (_isInitialized) return;
 
     _globalContainer = DireContainer();
@@ -117,8 +130,9 @@ mixin DiCore {
   /// // With dependency registration callback
   /// await DiCore.initialize((container) => container.registerGeneratedDependencies());
   /// ```
-  static Future<void> initialize(
-      [void Function(DireContainer)? registerCallback,]) async {
+  static Future<void> initialize([
+    void Function(DireContainer)? registerCallback,
+  ]) async {
     await _initializeContainer(registerCallback);
   }
 

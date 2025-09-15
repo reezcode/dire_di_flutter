@@ -1,3 +1,7 @@
+## 2.4.1
+
+- **Easier to get Dire Container**: Added static to get DireContainer via mixin
+
 ## 2.4.0
 
 ### 🚀 Major Flutter Integration Improvements

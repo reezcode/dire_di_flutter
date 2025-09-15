@@ -16,6 +16,7 @@ class ComponentInfo {
     required this.profiles,
     this.constructorDependencies = const [],
     this.autowiredFields = const [],
+    this.interfaceType,
   });
   final String className;
   final String componentType;
@@ -24,6 +25,7 @@ class ComponentInfo {
   final List<String> profiles;
   final List<DependencyInfo> constructorDependencies;
   final List<FieldDependencyInfo> autowiredFields;
+  final String? interfaceType;
 }
 
 class DependencyInfo {
@@ -62,6 +64,7 @@ class ComponentInfoWithSource extends ComponentInfo {
     required super.profiles,
     super.constructorDependencies = const [],
     super.autowiredFields = const [],
+    super.interfaceType,
     required this.sourceFile,
   });
   final String sourceFile;
@@ -152,16 +155,27 @@ class DireDiAggregatingBuilder implements Builder {
     List<ComponentInfoWithSource> allComponents,
   ) async {
     try {
-      // Skip generated files
+      // Skip generated files and part files
       if (assetId.path.contains('.g.dart') ||
           assetId.path.contains('.dire_di.dart') ||
-          assetId.path.contains('.freezed.dart')) {
+          assetId.path.contains('.freezed.dart') ||
+          assetId.path.contains('.config.dart') ||
+          assetId.path.contains('.chopper.dart') ||
+          assetId.path.contains('.gr.dart') ||
+          assetId.path.contains('.mocks.dart')) {
         return;
       }
 
       log.fine('Processing file: ${assetId.path}');
 
-      final library = await buildStep.resolver.libraryFor(assetId);
+      // Try to get the library, skip if it's not a valid Dart library
+      LibraryElement library;
+      try {
+        library = await buildStep.resolver.libraryFor(assetId);
+      } catch (e) {
+        log.fine('Skipping ${assetId.path}: Not a valid Dart library ($e)');
+        return;
+      }
 
       // Extract components using only analyzer package
       final components = _extractComponentsFromLibrary(library);
@@ -177,6 +191,7 @@ class DireDiAggregatingBuilder implements Builder {
               profiles: c.profiles,
               constructorDependencies: c.constructorDependencies,
               autowiredFields: c.autowiredFields,
+              interfaceType: c.interfaceType,
               sourceFile: assetId.path,
             ),
           )
@@ -225,6 +240,7 @@ class DireDiAggregatingBuilder implements Builder {
     String? beanName;
     ScopeType scope = ScopeType.singleton;
     final List<String> profiles = [];
+    String? interfaceType;
 
     // Extract annotation information
     for (final meta in element.metadata) {
@@ -252,6 +268,18 @@ class DireDiAggregatingBuilder implements Builder {
       }
     }
 
+    // Detect interface implementation
+    // Look for interfaces that this class implements
+    for (final interface in element.interfaces) {
+      final interfaceName = interface.element.displayName;
+
+      // Skip common Dart interfaces and framework interfaces
+      if (!_isFrameworkInterface(interfaceName)) {
+        interfaceType = interfaceName;
+        break; // Use the first non-framework interface found
+      }
+    }
+
     // Extract constructor dependencies
     final constructorDeps = _extractConstructorDependencies(element);
 
@@ -266,6 +294,7 @@ class DireDiAggregatingBuilder implements Builder {
       profiles: profiles,
       constructorDependencies: constructorDeps,
       autowiredFields: fieldDeps,
+      interfaceType: interfaceType,
     );
   }
 
@@ -454,13 +483,13 @@ class DireDiAggregatingBuilder implements Builder {
 
     // Generate getter for each component
     for (final component in components) {
-      final className = component.className;
-      final propertyName = _getPropertyName(className);
+      final registrationType = component.interfaceType ?? component.className;
+      final propertyName = _getPropertyName(registrationType);
 
-      buffer.writeln('  /// Get $className instance from DI container');
-      buffer.writeln('  $className get $propertyName {');
+      buffer.writeln('  /// Get $registrationType instance from DI container');
+      buffer.writeln('  $registrationType get $propertyName {');
       buffer.writeln('    if (this is DiCore) {');
-      buffer.writeln('      return (this as DiCore).get<$className>();');
+      buffer.writeln('      return (this as DiCore).get<$registrationType>();');
       buffer.writeln('    }');
       buffer.writeln('    throw StateError(');
       buffer.writeln('      \'DiMixin must be used with DiCore. \'');
@@ -470,10 +499,13 @@ class DireDiAggregatingBuilder implements Builder {
       buffer.writeln();
 
       // Also generate async getter
-      buffer.writeln('  /// Get $className instance from DI container (async)');
-      buffer.writeln('  Future<$className> get ${propertyName}Async async {');
+      buffer.writeln(
+          '  /// Get $registrationType instance from DI container (async)');
+      buffer.writeln(
+          '  Future<$registrationType> get ${propertyName}Async async {');
       buffer.writeln('    if (this is DiCore) {');
-      buffer.writeln('      return (this as DiCore).getAsync<$className>();');
+      buffer.writeln(
+          '      return (this as DiCore).getAsync<$registrationType>();');
       buffer.writeln('    }');
       buffer.writeln('    throw StateError(');
       buffer.writeln('      \'DiMixin must be used with DiCore. \'');
@@ -548,6 +580,7 @@ class DireDiAggregatingBuilder implements Builder {
             componentType: '',
             scope: ScopeType.singleton,
             profiles: [],
+            interfaceType: null,
             sourceFile: '',
           ),
         );
@@ -571,8 +604,11 @@ class DireDiAggregatingBuilder implements Builder {
   String _generateComponentRegistration(ComponentInfoWithSource component) {
     final buffer = StringBuffer();
 
+    // Determine the registration type - use interface if available, otherwise class name
+    final registrationType = component.interfaceType ?? component.className;
+
     // Start registration
-    buffer.write('    register<${component.className}>(');
+    buffer.write('    register<$registrationType>(');
     buffer.writeln();
     buffer.write('      () ');
 
@@ -615,5 +651,64 @@ class DireDiAggregatingBuilder implements Builder {
     buffer.write('    );');
 
     return buffer.toString();
+  }
+
+  /// Checks if the given interface name is a framework interface that should be ignored
+  bool _isFrameworkInterface(String interfaceName) {
+    // List of common Dart and framework interfaces to ignore
+    const frameworkInterfaces = {
+      'Comparable',
+      'Iterator',
+      'Iterable',
+      'Stream',
+      'Future',
+      'List',
+      'Map',
+      'Set',
+      'Object',
+      'Function',
+      'Exception',
+      'Error',
+      'StackTrace',
+      'Type',
+      'Symbol',
+      'RegExp',
+      'Match',
+      'Uri',
+      'DateTime',
+      'Duration',
+      'Stopwatch',
+      'Random',
+      'num',
+      'int',
+      'double',
+      'bool',
+      'String',
+      'StringSink',
+      'StringBuffer',
+      'Pattern',
+      // Flutter interfaces
+      'Widget',
+      'StatefulWidget',
+      'StatelessWidget',
+      'InheritedWidget',
+      'PreferredSizeWidget',
+      'SingleChildRenderObjectWidget',
+      'MultiChildRenderObjectWidget',
+      'RenderObjectWidget',
+      'Element',
+      'RenderObject',
+      'State',
+      'ChangeNotifier',
+      'ValueNotifier',
+      'Listenable',
+      'ValueListenable',
+      // Common third-party interfaces
+      'Equatable',
+      'Serializable',
+      'Copyable',
+    };
+
+    return frameworkInterfaces.contains(interfaceName);
   }
 }

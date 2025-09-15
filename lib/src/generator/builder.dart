@@ -1,8 +1,8 @@
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
-import 'di_generator.dart';
 import 'aggregating_builder.dart';
+import 'di_generator.dart';
 import 'mirrors_free_builder.dart';
 
 /// Builder for generating dependency injection code (per-file)

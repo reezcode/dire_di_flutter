@@ -1,8 +1,8 @@
 import 'package:dire_di_flutter/dire_di.dart';
-import 'controllers/user_controller.dart';
 
 // Import the generated registration file
 import 'app_module.dire_di.dart';
+import 'controllers/user_controller.dart';
 
 /// Entry point for DI configuration
 /// This annotation marks this file as the central point where all
@@ -28,9 +28,11 @@ Future<void> main() async {
   // Use the consolidated registration code from all files
   container.registerGeneratedDependencies();
 
-  print('Step 1: All dependencies registered from consolidated generated code...');
+  print(
+      'Step 1: All dependencies registered from consolidated generated code...',);
   print('Step 2: Components were found in multiple files:');
-  print('  - services/database_service.dart (DatabaseService, ConfigurationService)');
+  print(
+      '  - services/database_service.dart (DatabaseService, ConfigurationService)',);
   print('  - repositories/user_repository.dart (UserRepository)');
   print('  - services/user_service.dart (UserService)');
   print('  - controllers/user_controller.dart (UserController)');

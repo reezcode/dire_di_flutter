@@ -118,7 +118,6 @@ class DireContainer {
       type: T,
       name: beanName,
       factory: () => instance,
-      scope: ScopeType.singleton,
       qualifier: qualifier,
       profiles: profiles,
       isPrimary: isPrimary,
@@ -138,7 +137,7 @@ class DireContainer {
   T get<T extends Object>([String? qualifier]) {
     if (!_initialized) {
       throw ContainerInitializationException(
-          'Container not initialized. Call scan() first.');
+          'Container not initialized. Call scan() first.',);
     }
 
     try {
@@ -155,7 +154,7 @@ class DireContainer {
   Object getByName(String name) {
     if (!_initialized) {
       throw ContainerInitializationException(
-          'Container not initialized. Call scan() first.');
+          'Container not initialized. Call scan() first.',);
     }
 
     final beanDef = _namedBeanRegistry[name];

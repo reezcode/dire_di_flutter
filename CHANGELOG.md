@@ -1,3 +1,39 @@
+## 2.3.1
+
+### 🎯 Improved Developer Experience
+
+- **Concise Mixin Name**: Renamed `DireDiConvenienceMixin` to simply `DI` for better readability
+- **Cleaner Syntax**: Use `with DireDiMixin, DI` instead of the longer mixin name
+- **Better Documentation**: Updated all examples and error messages to use the shorter name
+
+## 2.3.0
+
+### 🎉 New Flutter Integration
+
+- **DireDiMixin**: New mixin for easy Flutter StatefulWidget integration
+- **Automatic Container Management**: No need to manually create DireContainer instances
+- **Sync and Async API**: `get<T>()` for immediate access, `getAsync<T>()` for auto-initialization
+- **Global Container**: Single container instance shared across all widgets
+- **Type Safety**: Full generic type support with compile-time checking
+- **Flutter Optimized**: Designed specifically for StatefulWidget states
+
+### � Auto-Generated Convenience Properties
+
+- **DI Mixin**: Auto-generated mixin with direct property access
+- **Zero Boilerplate**: Direct `userService` access instead of `get<UserService>()`
+- **IDE Integration**: Full auto-completion and refactoring support
+- **Type Safety**: Compile-time checking for all generated properties
+- **Async Variants**: Both `userService` and `userServiceAsync` for each component
+- **Clean UI Code**: Eliminates DI syntax completely from widget code
+
+### �📱 Flutter Developer Experience
+
+- **Zero Boilerplate**: Add `with DireDiMixin, DI` and access dependencies directly
+- **Convenient Methods**: `has<T>()`, `getAll<T>()`, `register<T>()`, `hasAsync<T>()`
+- **Qualifier Support**: Named instances via `get<T>('name')` and `getAsync<T>('name')`
+- **Error Handling**: Graceful handling of uninitialized containers
+- **Testing Support**: `DireDiMixin.reset()` for test isolation
+
 ## 2.2.0
 
 ### 🎉 Major Features
@@ -66,7 +102,7 @@ This package now fully supports Android/iOS through mirrors-free code generation
 
 ---
 
-## 2.2.0
+## 1.0.0
 
 - Spring-like dependency injection for Dart
 - Auto-wiring with @Autowired annotation

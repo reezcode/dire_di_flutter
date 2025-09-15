@@ -215,6 +215,8 @@ export 'src/core/injection_context.dart';
 export 'src/core/scope_type.dart';
 // Exceptions
 export 'src/exceptions/dire_exceptions.dart';
+// Flutter integration
+export 'src/flutter/dire_di_mixin.dart';
 // Injection setup
 export 'src/injection.dart';
 // Utilities

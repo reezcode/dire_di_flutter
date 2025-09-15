@@ -27,6 +27,7 @@ extension GeneratedDependencies on DireContainer {
         instance.configService = get<ConfigurationService>();
         return instance;
       },
+      scope: ScopeType.singleton,
     );
 
     // Register UserController
@@ -36,16 +37,19 @@ extension GeneratedDependencies on DireContainer {
         instance.userService = get<UserService>();
         return instance;
       },
+      scope: ScopeType.singleton,
     );
 
     // Register DatabaseService
     register<DatabaseService>(
-      DatabaseService.new,
+      () => DatabaseService(),
+      scope: ScopeType.singleton,
     );
 
     // Register ConfigurationService
     register<ConfigurationService>(
-      ConfigurationService.new,
+      () => ConfigurationService(),
+      scope: ScopeType.singleton,
     );
 
     // Register UserService
@@ -55,6 +59,131 @@ extension GeneratedDependencies on DireContainer {
         instance.userRepository = get<UserRepository>();
         return instance;
       },
+      scope: ScopeType.singleton,
+    );
+  }
+}
+
+/// Convenience mixin that provides direct property access to DI components.
+/// Add this mixin to your StatefulWidget states for easy dependency access.
+///
+/// Example:
+/// ```dart
+/// class _MyWidgetState extends State<MyWidget> with DiCore, DiMixin {
+///   @override
+///   Widget build(BuildContext context) {
+///     return Text(userService.getCurrentUser()); // Direct access!
+///   }
+/// }
+/// ```
+mixin DiMixin {
+  /// Get UserRepository instance from DI container
+  UserRepository get userRepository {
+    if (this is DiCore) {
+      return (this as DiCore).get<UserRepository>();
+    }
+    throw StateError(
+      'DiMixin must be used with DiCore. '
+      'Add "with DiCore, DiMixin" to your class.',
+    );
+  }
+
+  /// Get UserRepository instance from DI container (async)
+  Future<UserRepository> get userRepositoryAsync async {
+    if (this is DiCore) {
+      return (this as DiCore).getAsync<UserRepository>();
+    }
+    throw StateError(
+      'DiMixin must be used with DiCore. '
+      'Add "with DiCore, DiMixin" to your class.',
+    );
+  }
+
+  /// Get UserController instance from DI container
+  UserController get userController {
+    if (this is DiCore) {
+      return (this as DiCore).get<UserController>();
+    }
+    throw StateError(
+      'DiMixin must be used with DiCore. '
+      'Add "with DiCore, DiMixin" to your class.',
+    );
+  }
+
+  /// Get UserController instance from DI container (async)
+  Future<UserController> get userControllerAsync async {
+    if (this is DiCore) {
+      return (this as DiCore).getAsync<UserController>();
+    }
+    throw StateError(
+      'DiMixin must be used with DiCore. '
+      'Add "with DiCore, DiMixin" to your class.',
+    );
+  }
+
+  /// Get DatabaseService instance from DI container
+  DatabaseService get databaseService {
+    if (this is DiCore) {
+      return (this as DiCore).get<DatabaseService>();
+    }
+    throw StateError(
+      'DiMixin must be used with DiCore. '
+      'Add "with DiCore, DiMixin" to your class.',
+    );
+  }
+
+  /// Get DatabaseService instance from DI container (async)
+  Future<DatabaseService> get databaseServiceAsync async {
+    if (this is DiCore) {
+      return (this as DiCore).getAsync<DatabaseService>();
+    }
+    throw StateError(
+      'DiMixin must be used with DiCore. '
+      'Add "with DiCore, DiMixin" to your class.',
+    );
+  }
+
+  /// Get ConfigurationService instance from DI container
+  ConfigurationService get configurationService {
+    if (this is DiCore) {
+      return (this as DiCore).get<ConfigurationService>();
+    }
+    throw StateError(
+      'DiMixin must be used with DiCore. '
+      'Add "with DiCore, DiMixin" to your class.',
+    );
+  }
+
+  /// Get ConfigurationService instance from DI container (async)
+  Future<ConfigurationService> get configurationServiceAsync async {
+    if (this is DiCore) {
+      return (this as DiCore).getAsync<ConfigurationService>();
+    }
+    throw StateError(
+      'DiMixin must be used with DiCore. '
+      'Add "with DiCore, DiMixin" to your class.',
+    );
+  }
+
+  /// Get UserService instance from DI container
+  UserService get userService {
+    if (this is DiCore) {
+      return (this as DiCore).get<UserService>();
+    }
+    throw StateError(
+      'DiMixin must be used with DiCore. '
+      'Add "with DiCore, DiMixin" to your class.',
+    );
+  }
+
+  /// Get UserService instance from DI container (async)
+  Future<UserService> get userServiceAsync async {
+    if (this is DiCore) {
+      return (this as DiCore).getAsync<UserService>();
+    }
+    throw StateError(
+      'DiMixin must be used with DiCore. '
+      'Add "with DiCore, DiMixin" to your class.',
     );
   }
 }

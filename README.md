@@ -5,11 +5,12 @@ A Spring-like dependency injection framework for Dart and Flutter with code gene
 ## Features
 
 - **Spring-like Annotations**: `@Service`, `@Repository`, `@Component`, `@Controller`
-- **Auto-wiring**: Automatic dependency resolution using `@Autowired`
+- **Constructor Injection**: Modern dependency injection via constructors (recommended)
 - **Code Generation**: Flutter-compatible using build_runner instead of dart:mirrors
 - **Consolidated Generation**: `@DireDiEntryPoint` for single-file registration
 - **Multi-File Support**: Components spread across multiple files automatically discovered
-- **Qualifier Support**: Use `@Qualifier` for specific bean selection
+- **Flutter Mixin**: Easy integration with StatefulWidget via `DireDiMixin`
+- **Qualifier Support**: Use named instances for specific bean selection
 - **Singleton and Prototype Scopes**: Control object lifecycle
 - **Conditional Registration**: `@ConditionalOnProperty`, `@ConditionalOnClass`
 - **Profile Support**: `@Profile` for environment-specific beans
@@ -29,21 +30,20 @@ dev_dependencies:
 
 ## Quick Start
 
-### 1. Define Your Services
+### 1. Define Your Services (Constructor Injection - Recommended)
 
 ```dart
 import 'package:dire_di/dire_di.dart';
 
 @Service()
 class UserService {
-  @Autowired()
-  UserRepository? userRepository;
+  final UserRepository userRepository;
+  final EmailService emailService;
 
-  @Autowired()
-  EmailService? emailService;
+  UserService(this.userRepository, this.emailService);
 
   Future<User> getUser(int id) {
-    return userRepository!.findById(id);
+    return userRepository.findById(id);
   }
 }
 
@@ -147,6 +147,204 @@ void main() async {
 - ✅ Single consolidated `.dire_di.dart` file generated
 - ✅ Proper dependency ordering maintained
 - ✅ Better organization for large projects
+
+## Flutter Integration with DireDiMixin
+
+For easier Flutter integration, use the `DireDiMixin` with your StatefulWidget states:
+
+### Easy Flutter Setup
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:dire_di/dire_di.dart';
+import 'app_module.dire_di.dart'; // Your generated file
+
+void main() async {
+  // Optional: Pre-initialize DI container
+  await DireDiMixin.initialize();
+  runApp(MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with DireDiMixin {
+  @override
+  void initState() {
+    super.initState();
+    _initializeDependencies();
+  }
+
+  Future<void> _initializeDependencies() async {
+    final cont = await container;
+    cont.registerGeneratedDependencies();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: HomePage(),
+    );
+  }
+}
+```
+
+### Using Dependencies in Widgets
+
+```dart
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> with DireDiMixin {
+  String? currentUser;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      // Get dependencies asynchronously (auto-initializes if needed)
+      final userService = await getAsync<UserService>();
+
+      setState(() {
+        currentUser = userService.getCurrentUser();
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('User Info')),
+      body: isLoading
+          ? CircularProgressIndicator()
+          : Text('Current User: $currentUser'),
+    );
+  }
+}
+```
+
+### Mixin API
+
+```dart
+// Async methods (recommended - auto-initialize container)
+final service = await getAsync<UserService>();
+final namedService = await getAsync<ApiClient>('prod');
+final hasService = await hasAsync<UserService>();
+final allServices = await getAllAsync<UserService>();
+
+// Sync methods (container must be pre-initialized)
+final service = get<UserService>();
+final namedService = get<ApiClient>('prod');
+final hasService = has<UserService>();
+final allServices = getAll<UserService>();
+
+// Manual registration
+await register<ApiClient>(() => ApiClient(baseUrl: 'https://api.example.com'));
+
+// Container management
+await DireDiMixin.initialize(); // Pre-initialize
+DireDiMixin.reset(); // Reset for testing
+```
+
+### Benefits of DireDiMixin
+
+- ✅ **No Manual Container Management**: Automatic DireContainer setup
+- ✅ **Global Container**: Single instance shared across all widgets
+- ✅ **Sync and Async Support**: Choose based on your initialization needs
+- ✅ **Type Safety**: Full generic type support with compile-time checking
+- ✅ **Qualifier Support**: Named instances via `get<T>('name')`
+- ✅ **Convenient Methods**: `has<T>()`, `getAll<T>()`, `register<T>()`
+- ✅ **Flutter Optimized**: Designed specifically for StatefulWidget states
+
+## Auto-Generated Convenience Properties
+
+For even easier access, the generated `.dire_di.dart` file includes a `DI` mixin with direct property access:
+
+### Direct Property Access
+
+```dart
+class _MyWidgetState extends State<MyWidget> with DireDiMixin, DI {
+  @override
+  Widget build(BuildContext context) {
+    // Direct property access - no get<T>() calls needed!
+    return Column(
+      children: [
+        Text('User: ${userService.getCurrentUser()}'),
+        Text('Database: ${databaseService.isConnected()}'),
+        Text('Config: ${configurationService.getConfigValue('app.name')}'),
+      ],
+    );
+  }
+
+  void updateUser() {
+    // Direct controller access
+    userController.updateUser('New Name');
+  }
+}
+```
+
+### Async Property Access
+
+```dart
+class _AsyncWidgetState extends State<AsyncWidget> with DireDiMixin, DI {
+  String? data;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    // Async properties ensure safe initialization
+    final svc = await userServiceAsync;
+    final db = await databaseServiceAsync;
+
+    setState(() {
+      data = '${svc.getCurrentUser()} from ${db.getDatabaseUrl()}';
+    });
+  }
+}
+```
+
+### Auto-Generated Properties
+
+For each `@Service()`, `@Repository()`, `@Component()`, etc., the generator creates:
+
+```dart
+// If you have UserService, you get:
+UserService get userService;
+Future<UserService> get userServiceAsync;
+
+// If you have DatabaseService, you get:
+DatabaseService get databaseService;
+Future<DatabaseService> get databaseServiceAsync;
+
+// And so on for all your components...
+```
+
+### Benefits of Convenience Properties
+
+- ✅ **Zero Boilerplate**: No manual property definitions
+- ✅ **Direct Access**: `userService` instead of `get<UserService>()`
+- ✅ **Type Safe**: Full compile-time type checking
+- ✅ **IDE Friendly**: Auto-completion and refactoring support
+- ✅ **Auto-Generated**: Automatically updated when you add/remove services
+- ✅ **Clean Code**: Eliminates DI syntax completely from UI code
 
 ## Mobile Platform Support
 

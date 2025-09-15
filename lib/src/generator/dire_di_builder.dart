@@ -8,7 +8,6 @@ import '../core/scope_type.dart';
 
 /// ComponentInfo without source_gen dependency
 class ComponentInfo {
-
   ComponentInfo({
     required this.className,
     required this.componentType,
@@ -28,7 +27,6 @@ class ComponentInfo {
 }
 
 class DependencyInfo {
-
   DependencyInfo({
     required this.type,
     required this.name,
@@ -42,7 +40,6 @@ class DependencyInfo {
 }
 
 class FieldDependencyInfo {
-
   FieldDependencyInfo({
     required this.fieldName,
     required this.type,
@@ -57,7 +54,6 @@ class FieldDependencyInfo {
 
 /// Extended ComponentInfo that includes source file information
 class ComponentInfoWithSource extends ComponentInfo {
-
   ComponentInfoWithSource({
     required super.className,
     required super.componentType,
@@ -72,8 +68,8 @@ class ComponentInfoWithSource extends ComponentInfo {
 }
 
 /// Mirrors-free aggregating builder using only analyzer package
-class MirrorsFreeAggregatingBuilder implements Builder {
-  const MirrorsFreeAggregatingBuilder();
+class DireDiAggregatingBuilder implements Builder {
+  const DireDiAggregatingBuilder();
 
   @override
   Map<String, List<String>> get buildExtensions => {
@@ -128,7 +124,8 @@ class MirrorsFreeAggregatingBuilder implements Builder {
   }
 
   Future<List<ComponentInfoWithSource>> _collectAllComponents(
-      BuildStep buildStep,) async {
+    BuildStep buildStep,
+  ) async {
     final allComponents = <ComponentInfoWithSource>[];
 
     // Find all Dart files in the project - both lib and example directories
@@ -149,8 +146,11 @@ class MirrorsFreeAggregatingBuilder implements Builder {
     return allComponents;
   }
 
-  Future<void> _processFile(AssetId assetId, BuildStep buildStep,
-      List<ComponentInfoWithSource> allComponents,) async {
+  Future<void> _processFile(
+    AssetId assetId,
+    BuildStep buildStep,
+    List<ComponentInfoWithSource> allComponents,
+  ) async {
     try {
       // Skip generated files
       if (assetId.path.contains('.g.dart') ||
@@ -168,16 +168,18 @@ class MirrorsFreeAggregatingBuilder implements Builder {
 
       // Add source file information to each component
       final componentsWithSource = components
-          .map((c) => ComponentInfoWithSource(
-                className: c.className,
-                componentType: c.componentType,
-                beanName: c.beanName,
-                scope: c.scope,
-                profiles: c.profiles,
-                constructorDependencies: c.constructorDependencies,
-                autowiredFields: c.autowiredFields,
-                sourceFile: assetId.path,
-              ),)
+          .map(
+            (c) => ComponentInfoWithSource(
+              className: c.className,
+              componentType: c.componentType,
+              beanName: c.beanName,
+              scope: c.scope,
+              profiles: c.profiles,
+              constructorDependencies: c.constructorDependencies,
+              autowiredFields: c.autowiredFields,
+              sourceFile: assetId.path,
+            ),
+          )
           .toList();
 
       allComponents.addAll(componentsWithSource);
@@ -209,13 +211,14 @@ class MirrorsFreeAggregatingBuilder implements Builder {
     return components;
   }
 
-  bool _hasComponentAnnotation(ClassElement element) => element.metadata.any((meta) {
-      final annotationName = meta.element?.displayName;
-      return annotationName == 'Service' ||
-          annotationName == 'Repository' ||
-          annotationName == 'Controller' ||
-          annotationName == 'Component';
-    });
+  bool _hasComponentAnnotation(ClassElement element) =>
+      element.metadata.any((meta) {
+        final annotationName = meta.element?.displayName;
+        return annotationName == 'Service' ||
+            annotationName == 'Repository' ||
+            annotationName == 'Controller' ||
+            annotationName == 'Component';
+      });
 
   ComponentInfo _extractComponentInfo(ClassElement element) {
     String componentType = 'Component';
@@ -280,12 +283,14 @@ class MirrorsFreeAggregatingBuilder implements Builder {
     if (constructor != null) {
       // Extract constructor parameters as dependencies
       for (final param in constructor.parameters) {
-        dependencies.add(DependencyInfo(
-          type: param.type.getDisplayString(withNullability: false),
-          name: param.displayName,
-          isRequired: param.isRequired,
-          qualifier: _extractQualifier(param),
-        ),);
+        dependencies.add(
+          DependencyInfo(
+            type: param.type.getDisplayString(withNullability: false),
+            name: param.displayName,
+            isRequired: param.isRequired,
+            qualifier: _extractQualifier(param),
+          ),
+        );
       }
     }
 
@@ -298,17 +303,21 @@ class MirrorsFreeAggregatingBuilder implements Builder {
     for (final field in element.fields) {
       // Check if field has @Autowired annotation
       final hasAutowired = field.metadata.any(
-          (meta) => meta.element?.enclosingElement?.displayName == 'Autowired',);
+        (meta) => meta.element?.enclosingElement?.displayName == 'Autowired',
+      );
 
       if (hasAutowired) {
         final qualifier = _extractFieldQualifier(field);
-        fields.add(FieldDependencyInfo(
-          fieldName: field.displayName,
-          type: field.type.getDisplayString(withNullability: false),
-          qualifier: qualifier,
-          isNullable:
-              field.type.getDisplayString(withNullability: true).endsWith('?'),
-        ),);
+        fields.add(
+          FieldDependencyInfo(
+            fieldName: field.displayName,
+            type: field.type.getDisplayString(withNullability: false),
+            qualifier: qualifier,
+            isNullable: field.type
+                .getDisplayString(withNullability: true)
+                .endsWith('?'),
+          ),
+        );
       }
     }
 
@@ -347,17 +356,21 @@ class MirrorsFreeAggregatingBuilder implements Builder {
   }
 
   String _generateConsolidatedCode(
-      List<ComponentInfoWithSource> components, AssetId inputId,) {
+    List<ComponentInfoWithSource> components,
+    AssetId inputId,
+  ) {
     final buffer = StringBuffer();
 
     // Generate header
     buffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND');
     buffer.writeln();
     buffer.writeln(
-        '// **************************************************************************',);
+      '// **************************************************************************',
+    );
     buffer.writeln('// DireDi Generator');
     buffer.writeln(
-        '// **************************************************************************',);
+      '// **************************************************************************',
+    );
     buffer.writeln();
     buffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND');
     buffer.writeln('// Generated by dire_di code generator');
@@ -367,6 +380,8 @@ class MirrorsFreeAggregatingBuilder implements Builder {
 
     // Add imports
     buffer.writeln("import 'package:dire_di_flutter/dire_di.dart';");
+    // Add imports for the DI framework
+    buffer.writeln("import 'package:dire_di/dire_di.dart';");
     buffer.writeln();
 
     // Add imports for all files that contain components
@@ -387,7 +402,8 @@ class MirrorsFreeAggregatingBuilder implements Builder {
     // Generate extension with all registrations
     buffer.writeln('extension GeneratedDependencies on DireContainer {');
     buffer.writeln(
-        '  /// Register all discovered components from the entire project',);
+      '  /// Register all discovered components from the entire project',
+    );
     buffer.writeln('  void registerGeneratedDependencies() {');
 
     // Sort components by dependency order (dependencies first)
@@ -401,8 +417,76 @@ class MirrorsFreeAggregatingBuilder implements Builder {
 
     buffer.writeln('  }');
     buffer.writeln('}');
+    buffer.writeln();
+
+    // Generate convenience mixin extension with auto-generated getters
+    _generateDireDiConvenienceMixin(buffer, components);
 
     return buffer.toString();
+  }
+
+  /// Generate convenience mixin extension with auto-generated getters for each component
+  void _generateDireDiConvenienceMixin(
+    StringBuffer buffer,
+    List<ComponentInfoWithSource> components,
+  ) {
+    buffer.writeln(
+        '/// Convenience mixin that provides direct property access to DI components.');
+    buffer.writeln(
+        '/// Add this mixin to your StatefulWidget states for easy dependency access.');
+    buffer.writeln('///');
+    buffer.writeln('/// Example:');
+    buffer.writeln('/// ```dart');
+    buffer.writeln(
+        '/// class _MyWidgetState extends State<MyWidget> with DiCore, DiMixin {');
+    buffer.writeln('///   @override');
+    buffer.writeln('///   Widget build(BuildContext context) {');
+    buffer.writeln(
+        '///     return Text(userService.getCurrentUser()); // Direct access!');
+    buffer.writeln('///   }');
+    buffer.writeln('/// }');
+    buffer.writeln('/// ```');
+    buffer.writeln('mixin DiMixin {');
+    buffer.writeln();
+
+    // Generate getter for each component
+    for (final component in components) {
+      final className = component.className;
+      final propertyName = _getPropertyName(className);
+
+      buffer.writeln('  /// Get $className instance from DI container');
+      buffer.writeln('  $className get $propertyName {');
+      buffer.writeln('    if (this is DiCore) {');
+      buffer.writeln('      return (this as DiCore).get<$className>();');
+      buffer.writeln('    }');
+      buffer.writeln('    throw StateError(');
+      buffer.writeln('      \'DiMixin must be used with DiCore. \'');
+      buffer.writeln('      \'Add "with DiCore, DiMixin" to your class.\',');
+      buffer.writeln('    );');
+      buffer.writeln('  }');
+      buffer.writeln();
+
+      // Also generate async getter
+      buffer.writeln('  /// Get $className instance from DI container (async)');
+      buffer.writeln('  Future<$className> get ${propertyName}Async async {');
+      buffer.writeln('    if (this is DiCore) {');
+      buffer.writeln('      return (this as DiCore).getAsync<$className>();');
+      buffer.writeln('    }');
+      buffer.writeln('    throw StateError(');
+      buffer.writeln('      \'DiMixin must be used with DiCore. \'');
+      buffer.writeln('      \'Add "with DiCore, DiMixin" to your class.\',');
+      buffer.writeln('    );');
+      buffer.writeln('  }');
+      buffer.writeln();
+    }
+
+    buffer.writeln('}');
+  }
+
+  /// Convert class name to property name (e.g., UserService -> userService)
+  String _getPropertyName(String className) {
+    if (className.isEmpty) return className;
+    return className[0].toLowerCase() + className.substring(1);
   }
 
   String _makeRelativeImport(String fromPath, String toPath) {
@@ -434,7 +518,8 @@ class MirrorsFreeAggregatingBuilder implements Builder {
   }
 
   List<ComponentInfoWithSource> _sortComponentsByDependencies(
-      List<ComponentInfoWithSource> components,) {
+    List<ComponentInfoWithSource> components,
+  ) {
     // Simple topological sort based on constructor dependencies
     final sorted = <ComponentInfoWithSource>[];
     final visited = <String>{};
@@ -513,7 +598,8 @@ class MirrorsFreeAggregatingBuilder implements Builder {
       // Field injection
       for (final field in component.autowiredFields) {
         buffer.writeln(
-            '        instance.${field.fieldName} = get<${field.type}>();',);
+          '        instance.${field.fieldName} = get<${field.type}>();',
+        );
       }
 
       buffer.writeln('        return instance;');

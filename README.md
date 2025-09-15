@@ -83,6 +83,8 @@ void main() async {
 dart pub run build_runner build
 ```
 
+> **Note**: The package uses the `dire_di_generator` builder by default, which is mirrors-free and mobile-compatible. Legacy builders are available as opt-in only to avoid conflicts.
+
 ## Consolidated Generation (New in v2.0.0)
 
 For larger projects with components spread across multiple files, use `@DireDiEntryPoint` to consolidate all registrations into a single file:
@@ -110,7 +112,7 @@ class UserService {
   late UserRepository userRepository;
 }
 
-// repositories/user_repository.dart  
+// repositories/user_repository.dart
 @Repository()
 class UserRepository {
   // Implementation
@@ -130,17 +132,18 @@ class UserController {
 void main() async {
   final container = DireContainer();
   await container.scan();
-  
+
   // All components from across the project registered with one call!
   container.registerGeneratedDependencies();
-  
+
   final controller = container.get<UserController>();
 }
 ```
 
 **Benefits:**
+
 - ✅ Only one `registerGeneratedDependencies()` call needed
-- ✅ Components automatically discovered across all files  
+- ✅ Components automatically discovered across all files
 - ✅ Single consolidated `.dire_di.dart` file generated
 - ✅ Proper dependency ordering maintained
 - ✅ Better organization for large projects
@@ -154,7 +157,7 @@ This package fully supports **Android, iOS, and all Flutter platforms** through 
 Unlike some DI packages, `dire_di_flutter` uses **code generation** instead of runtime reflection:
 
 - **Build Time**: Code analysis happens during `dart pub run build_runner build`
-- **Runtime**: Generated code contains zero mirrors dependency  
+- **Runtime**: Generated code contains zero mirrors dependency
 - **Mobile Compatible**: Works on all Flutter platforms without restrictions
 
 ### How It Works

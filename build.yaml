@@ -1,7 +1,7 @@
 targets:
   $default:
     builders:
-      dire_di_flutter|di_mirrors_free_generator:
+      dire_di_flutter|dire_di_generator:
         enabled: true
         generate_for:
           include:
@@ -9,19 +9,21 @@ targets:
             - example/**.dart
 
 builders:
-  di_generator:
-    target: ":di_generator"
-    import: "package:dire_di_flutter/builder.dart"
-    builder_factories: ["diBuilder"]
-    build_extensions: { ".dart": [".dire_di.dart"] }
-    auto_apply: dependents
-    build_to: source
-    applies_builders: ["source_gen|combining_builder"]
-
-  di_mirrors_free_generator:
-    target: ":di_mirrors_free_generator"
+  # Main builder (mirrors-free, recommended)
+  dire_di_generator:
+    target: ":dire_di_generator"
     import: "package:dire_di_flutter/builder.dart"
     builder_factories: ["diMirrorsFreeBuilder"]
     build_extensions: { ".dart": [".dire_di.dart"] }
     auto_apply: dependents
     build_to: source
+
+  # Legacy builder (opt-in only, uses source_gen with dart:mirrors)
+  di_legacy_generator:
+    target: ":di_legacy_generator"
+    import: "package:dire_di_flutter/builder.dart"
+    builder_factories: ["diLegacyBuilder"]
+    build_extensions: { ".dart": [".dire_di.dart"] }
+    auto_apply: none
+    build_to: source
+    applies_builders: ["source_gen|combining_builder"]

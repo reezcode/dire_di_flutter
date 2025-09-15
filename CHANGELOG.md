@@ -1,4 +1,4 @@
-## 2.1.0
+## 2.2.0
 
 ### 🎉 Major Features
 
@@ -8,26 +8,34 @@
 - **Aggregating Builder**: New builder scans entire project and generates consolidated registration code
 - **Improved Developer Experience**: No more managing multiple `.dire_di.dart` files
 
-### � Mobile Platform Support
+### 🚀 Mobile Platform Support
 
-- **Mirrors-Free Builder**: New `di_mirrors_free_generator` eliminates `dart:mirrors` dependency
+- **Mirrors-Free by Default**: Main `dire_di_generator` is now mirrors-free and mobile compatible
 - **Flutter/Android/iOS Compatible**: Generated code runs on all Flutter platforms without restrictions
 - **Build-Time Only Dependencies**: Code analysis happens only during build, not at runtime
-- **Automatic Detection**: Builder automatically detects and uses mirrors-free approach when needed
+- **Single Builder**: Eliminated builder conflicts - only one active builder by default
 
-### �🔧 Technical Improvements
+### 🔧 Technical Improvements
 
-- Added `DireDiAggregatingBuilder` for cross-file component discovery
+- **Renamed Builders**: Main builder is now `dire_di_generator` (was `di_mirrors_free_generator`)
+- **Conflict Resolution**: Fixed "Potential outputs must be unique" error by making legacy builders opt-in only
 - Added `MirrorsFreeAggregatingBuilder` for mobile platform compatibility
 - Enhanced import path resolution for better generated code
 - Improved dependency ordering in generated registrations
 - Better error handling and logging during code generation
+
+### 🚨 Breaking Changes
+
+- **Builder Names**: Main builder renamed from `di_mirrors_free_generator` to `dire_di_generator`
+- **Auto-Apply**: Legacy `di_generator` is now opt-in only (`auto_apply: none`)
+- **Default Behavior**: Package now uses mirrors-free generation by default
 
 ### 📚 Documentation
 
 - Updated examples to demonstrate multi-file usage
 - Added comprehensive documentation for `@DireDiEntryPoint`
 - Improved README with new usage patterns
+- Added explanation of mirrors-free approach for mobile platforms
 - Added explanation of mirrors-free approach for mobile platforms
 
 ### 🚀 Migration Guide
@@ -58,7 +66,7 @@ This package now fully supports Android/iOS through mirrors-free code generation
 
 ---
 
-## 2.1.0
+## 2.2.0
 
 - Spring-like dependency injection for Dart
 - Auto-wiring with @Autowired annotation

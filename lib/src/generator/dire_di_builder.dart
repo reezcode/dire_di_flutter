@@ -431,18 +431,18 @@ class DireDiAggregatingBuilder implements Builder {
     List<ComponentInfoWithSource> components,
   ) {
     buffer.writeln(
-        '/// Convenience mixin that provides direct property access to DI components.');
+        '/// Convenience mixin that provides direct property access to DI components.',);
     buffer.writeln(
-        '/// Add this mixin to your StatefulWidget states for easy dependency access.');
+        '/// Add this mixin to your StatefulWidget states for easy dependency access.',);
     buffer.writeln('///');
     buffer.writeln('/// Example:');
     buffer.writeln('/// ```dart');
     buffer.writeln(
-        '/// class _MyWidgetState extends State<MyWidget> with DiCore, DiMixin {');
+        '/// class _MyWidgetState extends State<MyWidget> with DiCore, DiMixin {',);
     buffer.writeln('///   @override');
     buffer.writeln('///   Widget build(BuildContext context) {');
     buffer.writeln(
-        '///     return Text(userService.getCurrentUser()); // Direct access!');
+        '///     return Text(userService.getCurrentUser()); // Direct access!',);
     buffer.writeln('///   }');
     buffer.writeln('/// }');
     buffer.writeln('/// ```');

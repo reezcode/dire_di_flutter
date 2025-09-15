@@ -5,7 +5,6 @@ import '../services/database_service.dart';
 
 @Service()
 class UserService {
-
   UserService(ConfigurationService config)
       : serviceName = 'UserService-${config.environment}';
   final String serviceName;

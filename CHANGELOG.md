@@ -1,3 +1,7 @@
+## 2.4.2
+
+- **Bug Fix Interface DI**: bug fixing for implementaiton injection
+
 ## 2.4.1
 
 - **Easier to get Dire Container**: Added static to get DireContainer via mixin

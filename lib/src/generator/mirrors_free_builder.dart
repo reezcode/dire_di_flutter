@@ -8,13 +8,6 @@ import '../core/scope_type.dart';
 
 /// ComponentInfo without source_gen dependency
 class ComponentInfo {
-  final String className;
-  final String componentType;
-  final String? beanName;
-  final ScopeType scope;
-  final List<String> profiles;
-  final List<DependencyInfo> constructorDependencies;
-  final List<FieldDependencyInfo> autowiredFields;
 
   ComponentInfo({
     required this.className,
@@ -25,13 +18,16 @@ class ComponentInfo {
     this.constructorDependencies = const [],
     this.autowiredFields = const [],
   });
+  final String className;
+  final String componentType;
+  final String? beanName;
+  final ScopeType scope;
+  final List<String> profiles;
+  final List<DependencyInfo> constructorDependencies;
+  final List<FieldDependencyInfo> autowiredFields;
 }
 
 class DependencyInfo {
-  final String type;
-  final String name;
-  final bool isRequired;
-  final String? qualifier;
 
   DependencyInfo({
     required this.type,
@@ -39,13 +35,13 @@ class DependencyInfo {
     required this.isRequired,
     this.qualifier,
   });
+  final String type;
+  final String name;
+  final bool isRequired;
+  final String? qualifier;
 }
 
 class FieldDependencyInfo {
-  final String fieldName;
-  final String type;
-  final String? qualifier;
-  final bool isNullable;
 
   FieldDependencyInfo({
     required this.fieldName,
@@ -53,11 +49,14 @@ class FieldDependencyInfo {
     this.qualifier,
     required this.isNullable,
   });
+  final String fieldName;
+  final String type;
+  final String? qualifier;
+  final bool isNullable;
 }
 
 /// Extended ComponentInfo that includes source file information
 class ComponentInfoWithSource extends ComponentInfo {
-  final String sourceFile;
 
   ComponentInfoWithSource({
     required super.className,
@@ -69,6 +68,7 @@ class ComponentInfoWithSource extends ComponentInfo {
     super.autowiredFields = const [],
     required this.sourceFile,
   });
+  final String sourceFile;
 }
 
 /// Mirrors-free aggregating builder using only analyzer package
@@ -77,7 +77,7 @@ class MirrorsFreeAggregatingBuilder implements Builder {
 
   @override
   Map<String, List<String>> get buildExtensions => {
-        '.dart': ['.dire_di.dart']
+        '.dart': ['.dire_di.dart'],
       };
 
   @override
@@ -128,7 +128,7 @@ class MirrorsFreeAggregatingBuilder implements Builder {
   }
 
   Future<List<ComponentInfoWithSource>> _collectAllComponents(
-      BuildStep buildStep) async {
+      BuildStep buildStep,) async {
     final allComponents = <ComponentInfoWithSource>[];
 
     // Find all Dart files in the project - both lib and example directories
@@ -150,7 +150,7 @@ class MirrorsFreeAggregatingBuilder implements Builder {
   }
 
   Future<void> _processFile(AssetId assetId, BuildStep buildStep,
-      List<ComponentInfoWithSource> allComponents) async {
+      List<ComponentInfoWithSource> allComponents,) async {
     try {
       // Skip generated files
       if (assetId.path.contains('.g.dart') ||
@@ -177,7 +177,7 @@ class MirrorsFreeAggregatingBuilder implements Builder {
                 constructorDependencies: c.constructorDependencies,
                 autowiredFields: c.autowiredFields,
                 sourceFile: assetId.path,
-              ))
+              ),)
           .toList();
 
       allComponents.addAll(componentsWithSource);
@@ -209,21 +209,19 @@ class MirrorsFreeAggregatingBuilder implements Builder {
     return components;
   }
 
-  bool _hasComponentAnnotation(ClassElement element) {
-    return element.metadata.any((meta) {
+  bool _hasComponentAnnotation(ClassElement element) => element.metadata.any((meta) {
       final annotationName = meta.element?.displayName;
       return annotationName == 'Service' ||
           annotationName == 'Repository' ||
           annotationName == 'Controller' ||
           annotationName == 'Component';
     });
-  }
 
   ComponentInfo _extractComponentInfo(ClassElement element) {
     String componentType = 'Component';
     String? beanName;
     ScopeType scope = ScopeType.singleton;
-    List<String> profiles = [];
+    final List<String> profiles = [];
 
     // Extract annotation information
     for (final meta in element.metadata) {
@@ -287,7 +285,7 @@ class MirrorsFreeAggregatingBuilder implements Builder {
           name: param.displayName,
           isRequired: param.isRequired,
           qualifier: _extractQualifier(param),
-        ));
+        ),);
       }
     }
 
@@ -300,7 +298,7 @@ class MirrorsFreeAggregatingBuilder implements Builder {
     for (final field in element.fields) {
       // Check if field has @Autowired annotation
       final hasAutowired = field.metadata.any(
-          (meta) => meta.element?.enclosingElement?.displayName == 'Autowired');
+          (meta) => meta.element?.enclosingElement?.displayName == 'Autowired',);
 
       if (hasAutowired) {
         final qualifier = _extractFieldQualifier(field);
@@ -310,7 +308,7 @@ class MirrorsFreeAggregatingBuilder implements Builder {
           qualifier: qualifier,
           isNullable:
               field.type.getDisplayString(withNullability: true).endsWith('?'),
-        ));
+        ),);
       }
     }
 
@@ -349,17 +347,17 @@ class MirrorsFreeAggregatingBuilder implements Builder {
   }
 
   String _generateConsolidatedCode(
-      List<ComponentInfoWithSource> components, AssetId inputId) {
+      List<ComponentInfoWithSource> components, AssetId inputId,) {
     final buffer = StringBuffer();
 
     // Generate header
     buffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND');
     buffer.writeln();
     buffer.writeln(
-        '// **************************************************************************');
+        '// **************************************************************************',);
     buffer.writeln('// DireDi Generator');
     buffer.writeln(
-        '// **************************************************************************');
+        '// **************************************************************************',);
     buffer.writeln();
     buffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND');
     buffer.writeln('// Generated by dire_di code generator');
@@ -389,7 +387,7 @@ class MirrorsFreeAggregatingBuilder implements Builder {
     // Generate extension with all registrations
     buffer.writeln('extension GeneratedDependencies on DireContainer {');
     buffer.writeln(
-        '  /// Register all discovered components from the entire project');
+        '  /// Register all discovered components from the entire project',);
     buffer.writeln('  void registerGeneratedDependencies() {');
 
     // Sort components by dependency order (dependencies first)
@@ -436,7 +434,7 @@ class MirrorsFreeAggregatingBuilder implements Builder {
   }
 
   List<ComponentInfoWithSource> _sortComponentsByDependencies(
-      List<ComponentInfoWithSource> components) {
+      List<ComponentInfoWithSource> components,) {
     // Simple topological sort based on constructor dependencies
     final sorted = <ComponentInfoWithSource>[];
     final visited = <String>{};
@@ -515,7 +513,7 @@ class MirrorsFreeAggregatingBuilder implements Builder {
       // Field injection
       for (final field in component.autowiredFields) {
         buffer.writeln(
-            '        instance.${field.fieldName} = get<${field.type}>();');
+            '        instance.${field.fieldName} = get<${field.type}>();',);
       }
 
       buffer.writeln('        return instance;');

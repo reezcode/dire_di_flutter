@@ -5,13 +5,13 @@ import '../services/database_service.dart';
 
 @Service()
 class UserService {
+
+  UserService(ConfigurationService config)
+      : serviceName = 'UserService-${config.environment}';
   final String serviceName;
 
   @Autowired()
   late UserRepository userRepository;
-
-  UserService(ConfigurationService config)
-      : serviceName = 'UserService-${config.environment}';
 
   void getUserById(String id) {
     print('$serviceName: Getting user $id');

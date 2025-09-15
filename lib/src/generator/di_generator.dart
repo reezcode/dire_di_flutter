@@ -8,6 +8,17 @@ import '../core/scope_type.dart';
 class DiGenerator extends Generator {
   @override
   String generate(LibraryReader library, BuildStep buildStep) {
+    final components = extractComponentsFromLibrary(library);
+
+    if (components.isEmpty) {
+      return '';
+    }
+
+    return _generateRegistrationCode(components, buildStep);
+  }
+
+  /// Extracts component information from a library - exposed for use by aggregating builder
+  List<ComponentInfo> extractComponentsFromLibrary(LibraryReader library) {
     final components = <ComponentInfo>[];
 
     // Scan all classes in the library
@@ -20,11 +31,7 @@ class DiGenerator extends Generator {
       }
     }
 
-    if (components.isEmpty) {
-      return '';
-    }
-
-    return _generateRegistrationCode(components, buildStep);
+    return components;
   }
 
   bool _hasComponentAnnotation(ClassElement element) {

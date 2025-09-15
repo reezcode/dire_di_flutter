@@ -1,11 +1,14 @@
-# Dire DI
+# Dire DI Flutter
 
-A Spring-like dependency injection framework for Dart with auto-wiring capabilities using mirrors.
+A Spring-like dependency injection framework for Dart and Flutter with code generation support for mobile platforms.
 
 ## Features
 
 - **Spring-like Annotations**: `@Service`, `@Repository`, `@Component`, `@Controller`
 - **Auto-wiring**: Automatic dependency resolution using `@Autowired`
+- **Code Generation**: Flutter-compatible using build_runner instead of dart:mirrors
+- **Consolidated Generation**: `@DireDiEntryPoint` for single-file registration
+- **Multi-File Support**: Components spread across multiple files automatically discovered
 - **Qualifier Support**: Use `@Qualifier` for specific bean selection
 - **Singleton and Prototype Scopes**: Control object lifecycle
 - **Conditional Registration**: `@ConditionalOnProperty`, `@ConditionalOnClass`
@@ -18,7 +21,10 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  dire_di: ^1.0.2
+  dire_di_flutter: ^2.0.0
+
+dev_dependencies:
+  build_runner: ^2.4.13
 ```
 
 ## Quick Start
@@ -70,6 +76,106 @@ void main() async {
   print('User: ${user.name}');
 }
 ```
+
+### 3. Run Code Generation
+
+```bash
+dart pub run build_runner build
+```
+
+## Consolidated Generation (New in v2.0.0)
+
+For larger projects with components spread across multiple files, use `@DireDiEntryPoint` to consolidate all registrations into a single file:
+
+### 1. Create an Entry Point
+
+```dart
+// app_module.dart
+import 'package:dire_di_flutter/dire_di.dart';
+import 'app_module.dire_di.dart'; // Generated file
+
+@DireDiEntryPoint()
+class AppModule {
+  // Entry point for DI configuration
+}
+```
+
+### 2. Spread Components Across Files
+
+```dart
+// services/user_service.dart
+@Service()
+class UserService {
+  @Autowired()
+  late UserRepository userRepository;
+}
+
+// repositories/user_repository.dart  
+@Repository()
+class UserRepository {
+  // Implementation
+}
+
+// controllers/user_controller.dart
+@Controller()
+class UserController {
+  @Autowired()
+  late UserService userService;
+}
+```
+
+### 3. Single Registration Call
+
+```dart
+void main() async {
+  final container = DireContainer();
+  await container.scan();
+  
+  // All components from across the project registered with one call!
+  container.registerGeneratedDependencies();
+  
+  final controller = container.get<UserController>();
+}
+```
+
+**Benefits:**
+- ✅ Only one `registerGeneratedDependencies()` call needed
+- ✅ Components automatically discovered across all files  
+- ✅ Single consolidated `.dire_di.dart` file generated
+- ✅ Proper dependency ordering maintained
+- ✅ Better organization for large projects
+
+## Mobile Platform Support
+
+This package fully supports **Android, iOS, and all Flutter platforms** through mirrors-free code generation.
+
+### Why No dart:mirrors Issues?
+
+Unlike some DI packages, `dire_di_flutter` uses **code generation** instead of runtime reflection:
+
+- **Build Time**: Code analysis happens during `dart pub run build_runner build`
+- **Runtime**: Generated code contains zero mirrors dependency  
+- **Mobile Compatible**: Works on all Flutter platforms without restrictions
+
+### How It Works
+
+```dart
+// 1. Your annotated classes (any platform)
+@Service()
+class UserService { ... }
+
+// 2. Code generation creates (mirrors-free)
+extension GeneratedDependencies on DireContainer {
+  void registerGeneratedDependencies() {
+    register<UserService>(() => UserService());
+  }
+}
+
+// 3. Your app uses plain Dart code (any platform)
+container.registerGeneratedDependencies(); // ✅ Works everywhere
+```
+
+**The Magic**: The build process uses advanced static analysis (not mirrors) to discover your components and generates plain Dart registration code that runs anywhere Flutter does.
 
 ## Advanced Usage
 

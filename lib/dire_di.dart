@@ -201,6 +201,7 @@ export 'src/annotations/component.dart';
 export 'src/annotations/conditional.dart';
 export 'src/annotations/configuration.dart';
 export 'src/annotations/controller.dart';
+export 'src/annotations/dire_di_entry_point.dart';
 export 'src/annotations/profile.dart';
 export 'src/annotations/qualifier.dart';
 export 'src/annotations/repository.dart';

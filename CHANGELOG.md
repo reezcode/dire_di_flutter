@@ -1,3 +1,61 @@
+## 2.0.0
+
+### 🎉 Major Features
+
+- **Consolidated Code Generation**: New `@DireDiEntryPoint` annotation allows consolidating all DI registrations into a single file
+- **Multi-File Support**: Components can now be spread across multiple files and automatically discovered
+- **Single Registration Call**: `registerGeneratedDependencies()` only needs to be called once from the entry point
+- **Aggregating Builder**: New builder scans entire project and generates consolidated registration code
+- **Improved Developer Experience**: No more managing multiple `.dire_di.dart` files
+
+### � Mobile Platform Support
+
+- **Mirrors-Free Builder**: New `di_mirrors_free_generator` eliminates `dart:mirrors` dependency
+- **Flutter/Android/iOS Compatible**: Generated code runs on all Flutter platforms without restrictions
+- **Build-Time Only Dependencies**: Code analysis happens only during build, not at runtime
+- **Automatic Detection**: Builder automatically detects and uses mirrors-free approach when needed
+
+### �🔧 Technical Improvements
+
+- Added `DireDiAggregatingBuilder` for cross-file component discovery
+- Added `MirrorsFreeAggregatingBuilder` for mobile platform compatibility
+- Enhanced import path resolution for better generated code
+- Improved dependency ordering in generated registrations
+- Better error handling and logging during code generation
+
+### 📚 Documentation
+
+- Updated examples to demonstrate multi-file usage
+- Added comprehensive documentation for `@DireDiEntryPoint`
+- Improved README with new usage patterns
+- Added explanation of mirrors-free approach for mobile platforms
+
+### 🚀 Migration Guide
+
+**Before (multiple files):**
+```dart
+// Each file had its own .dire_di.dart
+import 'service1.dire_di.dart';
+import 'service2.dire_di.dart';
+
+container.registerGeneratedDependencies(); // Multiple calls needed
+```
+
+**After (consolidated):**
+```dart
+@DireDiEntryPoint()
+class AppModule {}
+
+import 'app_module.dire_di.dart';
+container.registerGeneratedDependencies(); // Single call!
+```
+
+### 📱 Mobile Platform Notes
+
+This package now fully supports Android/iOS through mirrors-free code generation. The `dart:mirrors` dependency only exists during build time for legacy builders. The default `di_mirrors_free_generator` produces code that runs without any mirrors dependency on mobile platforms.
+
+---
+
 ## 1.0.2
 
 - Spring-like dependency injection for Dart

@@ -16,7 +16,8 @@ import '../core/scope_type.dart';
 /// import 'app_module.dire_di.dart'; // Your generated file
 ///
 /// void main() async {
-///   await DiCore.initialize();
+///   // Pre-initialize DI container with dependency registration
+///   await DiCore.initialize((container) => container.registerGeneratedDependencies());
 ///   runApp(MyApp());
 /// }
 ///
@@ -29,8 +30,7 @@ import '../core/scope_type.dart';
 ///   @override
 ///   void initState() {
 ///     super.initState();
-///     // Register generated dependencies
-///     container.then((cont) => cont.registerGeneratedDependencies());
+///     // Dependencies are already registered via the callback in main()
 ///   }
 ///
 ///   @override
@@ -42,7 +42,7 @@ import '../core/scope_type.dart';
 /// }
 /// ```
 ///
-/// Or use it in individual widgets:
+/// Or use async pattern in individual widgets:
 /// ```dart
 /// class MyWidget extends StatefulWidget {
 ///   @override
@@ -50,17 +50,25 @@ import '../core/scope_type.dart';
 /// }
 ///
 /// class _MyWidgetState extends State<MyWidget> with DiCore {
-///   late UserService userService;
+///   UserService? userService;
 ///
 ///   @override
 ///   void initState() {
 ///     super.initState();
-///     userService = get<UserService>();
+///     _initializeDependencies();
+///   }
+///
+///   void _initializeDependencies() async {
+///     userService = await getAsync<UserService>();
+///     setState(() {}); // Trigger rebuild with loaded dependencies
 ///   }
 ///
 ///   @override
 ///   Widget build(BuildContext context) {
-///     return Text('User: ${userService.getCurrentUser()}');
+///     if (userService == null) {
+///       return CircularProgressIndicator(); // Loading state
+///     }
+///     return Text('User: ${userService!.getCurrentUser()}');
 ///   }
 /// }
 /// ```
@@ -79,11 +87,17 @@ mixin DiCore {
 
   /// Initialize the global container with generated dependencies.
   /// This method is called automatically on first access.
-  static Future<void> _initializeContainer() async {
+  static Future<void> _initializeContainer(
+      [void Function(DireContainer)? registerCallback,]) async {
     if (_isInitialized) return;
 
     _globalContainer = DireContainer();
     await _globalContainer!.scan();
+
+    // Call the registration callback if provided
+    if (registerCallback != null) {
+      registerCallback(_globalContainer!);
+    }
 
     // Note: registerGeneratedDependencies() is an extension method from generated code.
     // Users need to ensure they import their generated .dire_di.dart file where this
@@ -97,13 +111,15 @@ mixin DiCore {
   ///
   /// Example:
   /// ```dart
-  /// void main() async {
-  ///   await DiCore.initialize();
-  ///   runApp(MyApp());
-  /// }
+  /// // Simple initialization
+  /// await DiCore.initialize();
+  ///
+  /// // With dependency registration callback
+  /// await DiCore.initialize((container) => container.registerGeneratedDependencies());
   /// ```
-  static Future<void> initialize() async {
-    await _initializeContainer();
+  static Future<void> initialize(
+      [void Function(DireContainer)? registerCallback,]) async {
+    await _initializeContainer(registerCallback);
   }
 
   /// Reset the container (useful for testing).
@@ -113,17 +129,32 @@ mixin DiCore {
   }
 
   /// Get a dependency of type T from the container.
-  /// The container is automatically initialized on first use.
+  ///
+  /// **Important**: This method requires the container to be pre-initialized.
+  /// For Flutter widgets, use `getAsync<T>()` in `initState()` or call
+  /// `await DiCore.initialize()` in your app's main() method.
   ///
   /// Example:
   /// ```dart
+  /// // Option 1: Pre-initialize in main()
+  /// void main() async {
+  ///   await DiCore.initialize();
+  ///   runApp(MyApp());
+  /// }
+  ///
+  /// // Then use synchronously:
   /// final userService = get<UserService>();
-  /// final namedService = get<UserService>('special');
+  ///
+  /// // Option 2: Use async version in widgets
+  /// final userService = await getAsync<UserService>();
   /// ```
   T get<T extends Object>([String? qualifier]) {
     if (!_isInitialized) {
       throw StateError(
-        'DireContainer not initialized. Call await get<T>() or use getAsync<T>() for automatic initialization.',
+        'DireContainer not initialized. Either:\n'
+        '1. Call "await DiCore.initialize()" in your main() method, or\n'
+        '2. Use "await getAsync<T>()" for automatic initialization.\n'
+        '3. In Flutter widgets, prefer using getAsync<T>() in initState().',
       );
     }
     return _globalContainer!.get<T>(qualifier);

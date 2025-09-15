@@ -1,3 +1,75 @@
+## 2.4.0
+
+### 🚀 Major Flutter Integration Improvements
+
+#### **New Simplified Initialization API**
+
+- **Callback Support**: `DiCore.initialize()` now accepts an optional callback for dependency registration
+- **One-Line Setup**: `await DiCore.initialize((container) => container.registerGeneratedDependencies())`
+- **Cleaner Main Function**: Simplified Flutter app initialization pattern
+
+#### **Enhanced Mixin Names for Better Readability**
+
+- **DiCore**: Renamed from `DireDiMixin` for concise, clear naming
+- **DiMixin**: Renamed from `DI` for better descriptiveness of auto-generated convenience properties
+- **Consistent Naming**: All class names now follow `Di*` pattern for better recognition
+
+#### **Improved Flutter Widget Integration**
+
+- **Better Error Messages**: Enhanced `get<T>()` error messages with clear solutions
+- **Async Patterns**: Comprehensive documentation for proper async initialization in widgets
+- **Loading State Handling**: Best practices for managing loading states in Flutter widgets
+
+#### **Comprehensive Documentation & Examples**
+
+- **Flutter Convenience Example**: New detailed example showing all usage patterns
+- **Best Practices Guide**: Clear DO/DON'T guidelines for Flutter integration
+- **Error Resolution**: Solutions for common Flutter widget mounting exceptions
+
+#### **File Structure Improvements**
+
+- **Builder Renaming**: `mirrors_free_builder.dart` → `dire_di_builder.dart` for clarity
+- **Class Renaming**: `MirrorsFreeAggregatingBuilder` → `DireDiAggregatingBuilder`
+- **Consistent Naming**: All generator files now follow consistent naming patterns
+
+### 🔧 Technical Improvements
+
+- Fixed Flutter widget mounting exceptions during async DI initialization
+- Enhanced container lifecycle management for Flutter apps
+- Improved error handling for synchronous dependency access
+- Better type safety in callback functions
+
+### 📖 Migration Guide
+
+**Before (v2.3.1):**
+
+```dart
+void main() async {
+  await DireDiMixin.initialize();
+  final container = DireContainer();
+  await container.scan();
+  container.registerGeneratedDependencies();
+  runApp(MyApp());
+}
+
+class _MyState extends State<MyWidget> with DireDiMixin, DI {
+  // ...
+}
+```
+
+**After (v2.4.0):**
+
+```dart
+void main() async {
+  await DiCore.initialize((container) => container.registerGeneratedDependencies());
+  runApp(MyApp());
+}
+
+class _MyState extends State<MyWidget> with DiCore, DiMixin {
+  // ...
+}
+```
+
 ## 2.3.1
 
 ### 🎯 Improved Developer Experience

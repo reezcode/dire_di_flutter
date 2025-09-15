@@ -22,7 +22,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  dire_di_flutter: ^2.0.0
+  dire_di_flutter: ^2.4.0
 
 dev_dependencies:
   build_runner: ^2.4.13
@@ -148,20 +148,32 @@ void main() async {
 - ✅ Proper dependency ordering maintained
 - ✅ Better organization for large projects
 
-## Flutter Integration with DireDiMixin
+## Flutter Integration with DiCore
 
-For easier Flutter integration, use the `DireDiMixin` with your StatefulWidget states:
+For easier Flutter integration, use the `DiCore` mixin with your StatefulWidget states:
 
-### Easy Flutter Setup
+### ⚠️ Important: Async Initialization Required
+
+**The DI container initialization is asynchronous**. You must handle this properly to avoid exceptions:
+
+### Option 1: Pre-initialize in main() (Recommended)
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:dire_di/dire_di.dart';
+import 'package:dire_di_flutter/dire_di.dart';
 import 'app_module.dire_di.dart'; // Your generated file
 
 void main() async {
-  // Optional: Pre-initialize DI container
-  await DireDiMixin.initialize();
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // CRITICAL: Pre-initialize DI container before runApp()
+  await DiCore.initialize();
+
+  // Register generated dependencies
+  final container = DireContainer();
+  await container.scan();
+  container.registerGeneratedDependencies();
+
   runApp(MyApp());
 }
 
@@ -170,18 +182,7 @@ class MyApp extends StatefulWidget {
   _MyAppState createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> with DireDiMixin {
-  @override
-  void initState() {
-    super.initState();
-    _initializeDependencies();
-  }
-
-  Future<void> _initializeDependencies() async {
-    final cont = await container;
-    cont.registerGeneratedDependencies();
-  }
-
+class _MyAppState extends State<MyApp> with DiCore, DiMixin {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -191,7 +192,7 @@ class _MyAppState extends State<MyApp> with DireDiMixin {
 }
 ```
 
-### Using Dependencies in Widgets
+### Option 2: Async Pattern in Widgets
 
 ```dart
 class HomePage extends StatefulWidget {
@@ -199,20 +200,116 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with DireDiMixin {
-  String? currentUser;
+class _HomePageState extends State<HomePage> with DiCore, DiMixin {
+  UserService? userService;
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _loadDependencies();
   }
 
-  Future<void> _loadData() async {
+  void _loadDependencies() async {
     try {
-      // Get dependencies asynchronously (auto-initializes if needed)
-      final userService = await getAsync<UserService>();
+      // Use convenience properties from DiMixin (recommended)
+      userService = await userServiceAsync;
+
+      // Or use direct async access:
+      // userService = await getAsync<UserService>();
+
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      print('DI Error: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: Text('Home')),
+      body: Center(
+        child: Text('User: ${userService?.getCurrentUser() ?? "None"}'),
+      ),
+    );
+  }
+}
+```
+
+### ❌ Common Mistakes to Avoid
+
+```dart
+// DON'T DO THIS - Will cause exceptions
+class _BadExampleState extends State<BadExample> with DiCore {
+  late UserService userService;
+
+  @override
+  void initState() {
+    super.initState();
+    userService = get<UserService>(); // ❌ This will throw!
+  }
+}
+
+// ✅ DO THIS INSTEAD
+class _GoodExampleState extends State<GoodExample> with DiCore, DiMixin {
+  UserService? userService;
+
+  @override
+  void initState() {
+    super.initState();
+    _initAsync();
+  }
+
+  void _initAsync() async {
+    userService = await userServiceAsync; // ✅ Safe async access
+    setState(() {});
+  }
+}
+```
+
+### DiMixin Convenience Properties
+
+When you use `DiMixin`, you get auto-generated convenience properties for all your dependencies:
+
+```dart
+class _MyWidgetState extends State<MyWidget> with DiCore, DiMixin {
+  void someMethod() async {
+    // Auto-generated properties from DiMixin:
+    final user = await userServiceAsync;
+    final repo = await userRepositoryAsync;
+    final controller = await userControllerAsync;
+
+    // These are equivalent to:
+    // final user = await getAsync<UserService>();
+  }
+}
+```
+
+class \_HomePageState extends State<HomePage> with DireDiMixin {
+String? currentUser;
+bool isLoading = true;
+
+@override
+void initState() {
+super.initState();
+\_loadData();
+}
+
+Future<void> \_loadData() async {
+try {
+// Get dependencies asynchronously (auto-initializes if needed)
+final userService = await getAsync<UserService>();
 
       setState(() {
         currentUser = userService.getCurrentUser();
@@ -223,19 +320,21 @@ class _HomePageState extends State<HomePage> with DireDiMixin {
         isLoading = false;
       });
     }
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('User Info')),
-      body: isLoading
-          ? CircularProgressIndicator()
-          : Text('Current User: $currentUser'),
-    );
-  }
 }
-```
+
+@override
+Widget build(BuildContext context) {
+return Scaffold(
+appBar: AppBar(title: Text('User Info')),
+body: isLoading
+? CircularProgressIndicator()
+: Text('Current User: $currentUser'),
+);
+}
+}
+
+````
 
 ### Mixin API
 
@@ -258,7 +357,7 @@ await register<ApiClient>(() => ApiClient(baseUrl: 'https://api.example.com'));
 // Container management
 await DireDiMixin.initialize(); // Pre-initialize
 DireDiMixin.reset(); // Reset for testing
-```
+````
 
 ### Benefits of DireDiMixin
 

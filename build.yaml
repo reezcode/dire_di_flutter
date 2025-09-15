@@ -18,14 +18,6 @@ builders:
     build_to: source
     applies_builders: ["source_gen|combining_builder"]
 
-  di_aggregating_generator:
-    target: ":di_aggregating_generator"
-    import: "package:dire_di_flutter/builder.dart"
-    builder_factories: ["diAggregatingBuilder"]
-    build_extensions: { ".dart": [".dire_di.dart"] }
-    auto_apply: dependents
-    build_to: source
-
   di_mirrors_free_generator:
     target: ":di_mirrors_free_generator"
     import: "package:dire_di_flutter/builder.dart"

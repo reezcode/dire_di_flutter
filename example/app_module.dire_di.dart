@@ -13,20 +13,22 @@ import 'package:dire_di_flutter/dire_di.dart';
 
 import 'controllers/user_controller.dart';
 import 'repositories/user_repository.dart';
+import 'repositories/user_repository_impl.dart';
 import 'services/database_service.dart';
 import 'services/user_service.dart';
 
 extension GeneratedDependencies on DireContainer {
   /// Register all discovered components from the entire project
   void registerGeneratedDependencies() {
-    // Register UserRepository
+    // Register UserRepositoryImpl
     register<UserRepository>(
       () {
-        final instance = UserRepository();
+        final instance = UserRepositoryImpl();
         instance.databaseService = get<DatabaseService>();
         instance.configService = get<ConfigurationService>();
         return instance;
       },
+      scope: ScopeType.singleton,
     );
 
     // Register UserController
@@ -36,16 +38,19 @@ extension GeneratedDependencies on DireContainer {
         instance.userService = get<UserService>();
         return instance;
       },
+      scope: ScopeType.singleton,
     );
 
     // Register DatabaseService
     register<DatabaseService>(
-      DatabaseService.new,
+      () => DatabaseService(),
+      scope: ScopeType.singleton,
     );
 
     // Register ConfigurationService
     register<ConfigurationService>(
-      ConfigurationService.new,
+      () => ConfigurationService(),
+      scope: ScopeType.singleton,
     );
 
     // Register UserService
@@ -55,6 +60,7 @@ extension GeneratedDependencies on DireContainer {
         instance.userRepository = get<UserRepository>();
         return instance;
       },
+      scope: ScopeType.singleton,
     );
   }
 }

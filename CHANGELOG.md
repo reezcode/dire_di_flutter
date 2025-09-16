@@ -1,3 +1,7 @@
+## 2.4.3
+
+- **New Annotations**: Added new DataSource and UseCase annotation
+
 ## 2.4.2
 
 - **Bug Fix Interface DI**: bug fixing for implementaiton injection

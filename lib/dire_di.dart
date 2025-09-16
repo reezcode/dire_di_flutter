@@ -5,7 +5,7 @@
 ///
 /// ## Features
 ///
-/// - **Spring-like Annotations**: `@Service`, `@Repository`, `@Component`, `@Controller`
+/// - **Spring-like Annotations**: `@Service`, `@Repository`, `@Component`, `@Controller`, `@UseCase`, `@DataSource`
 /// - **Constructor Injection**: Automatic dependency resolution via constructors
 /// - **Qualifier Support**: Use named instances for specific bean selection
 /// - **Singleton and Prototype Scopes**: Control object lifecycle
@@ -201,12 +201,14 @@ export 'src/annotations/component.dart';
 export 'src/annotations/conditional.dart';
 export 'src/annotations/configuration.dart';
 export 'src/annotations/controller.dart';
+export 'src/annotations/datasource.dart';
 export 'src/annotations/dire_di_entry_point.dart';
 export 'src/annotations/profile.dart';
 export 'src/annotations/qualifier.dart';
 export 'src/annotations/repository.dart';
 export 'src/annotations/scope.dart';
 export 'src/annotations/service.dart';
+export 'src/annotations/usecase.dart';
 // Core container (code generation based)
 export 'src/container/dire_container.dart';
 // Core types

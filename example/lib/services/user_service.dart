@@ -1,7 +1,7 @@
 import 'package:dire_di_flutter/dire_di.dart';
 
-import '../repositories/user_repository.dart';
-import '../services/database_service.dart';
+import '../../repositories/user_repository.dart';
+import 'database_service.dart';
 
 @Service()
 class UserService {

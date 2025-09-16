@@ -40,7 +40,9 @@ class DiGenerator extends Generator {
         return annotationName == 'Service' ||
             annotationName == 'Repository' ||
             annotationName == 'Controller' ||
-            annotationName == 'Component';
+            annotationName == 'Component' ||
+            annotationName == 'DataSource' ||
+            annotationName == 'UseCase';
       });
 
   ComponentInfo _extractComponentInfo(ClassElement element) {
@@ -65,6 +67,12 @@ class DiGenerator extends Generator {
           break;
         case 'Component':
           componentType = 'Component';
+          break;
+        case 'DataSource':
+          componentType = 'DataSource';
+          break;
+        case 'UseCase':
+          componentType = 'UseCase';
           break;
         case 'Scope':
           scope = _extractScope(meta);

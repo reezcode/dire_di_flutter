@@ -166,6 +166,20 @@ class DireDiAggregatingBuilder implements Builder {
         return;
       }
 
+      // Check if this is a part file by reading the first few lines
+      final content = await buildStep.readAsString(assetId);
+      final lines = content.split('\n').take(10).toList();
+
+      // Skip if it's a part file (starts with 'part of' or contains only 'part' statements)
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (trimmed.startsWith('part of ') ||
+            (trimmed.startsWith('part ') && trimmed.endsWith('.dart\';'))) {
+          log.fine('Skipping part file: ${assetId.path}');
+          return;
+        }
+      }
+
       log.fine('Processing file: ${assetId.path}');
 
       // Try to get the library, skip if it's not a valid Dart library
@@ -232,7 +246,9 @@ class DireDiAggregatingBuilder implements Builder {
         return annotationName == 'Service' ||
             annotationName == 'Repository' ||
             annotationName == 'Controller' ||
-            annotationName == 'Component';
+            annotationName == 'Component' ||
+            annotationName == 'DataSource' ||
+            annotationName == 'UseCase';
       });
 
   ComponentInfo _extractComponentInfo(ClassElement element) {
@@ -255,6 +271,12 @@ class DireDiAggregatingBuilder implements Builder {
           break;
         case 'Controller':
           componentType = 'Controller';
+          break;
+        case 'UseCase':
+          componentType = 'UseCase';
+          break;
+        case 'DataSource':
+          componentType = 'DataSource';
           break;
         case 'Component':
           componentType = 'Component';
@@ -413,14 +435,32 @@ class DireDiAggregatingBuilder implements Builder {
     buffer.writeln();
 
     // Add imports for all files that contain components
-    final importPaths = components
-        .map((c) => c.sourceFile)
-        .where((path) => path.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
+    final importPaths = <String>{};
 
-    for (final importPath in importPaths) {
+    // Add source files for all components
+    for (final component in components) {
+      if (component.sourceFile.isNotEmpty) {
+        importPaths.add(component.sourceFile);
+      }
+    }
+
+    // For interface-based DI, we need to also import interface files
+    // We'll use a simple pattern: UserRepositoryImpl -> UserRepository
+    for (final component in components) {
+      if (component.interfaceType != null &&
+          component.className.endsWith('Impl') &&
+          component.interfaceType ==
+              component.className.replaceAll('Impl', '')) {
+        // Pattern: repositories/user_repository_impl.dart -> repositories/user_repository.dart
+        final interfacePath =
+            component.sourceFile.replaceAll(RegExp(r'_impl\.dart$'), '.dart');
+        importPaths.add(interfacePath);
+      }
+    }
+
+    final sortedImportPaths = importPaths.toList()..sort();
+
+    for (final importPath in sortedImportPaths) {
       // Convert absolute path to relative import
       final relativePath = _makeRelativeImport(inputId.path, importPath);
       buffer.writeln("import '$relativePath';");

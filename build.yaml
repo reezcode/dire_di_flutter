@@ -7,6 +7,16 @@ targets:
           include:
             - lib/**.dart
             - example/**.dart
+          exclude:
+            - "**/*.g.dart"
+            - "**/*.freezed.dart"
+            - "**/*.dire_di.dart"
+            - "**/*.config.dart"
+            - "**/*.chopper.dart"
+            - "**/*.gr.dart"
+            - "**/*.mocks.dart"
+            - "**/*.part.dart"
+            - "**/build/**"
 
 builders:
   # Main builder (mirrors-free, recommended)

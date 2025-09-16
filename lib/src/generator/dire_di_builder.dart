@@ -155,29 +155,19 @@ class DireDiAggregatingBuilder implements Builder {
     List<ComponentInfoWithSource> allComponents,
   ) async {
     try {
-      // Skip generated files and part files
-      if (assetId.path.contains('.g.dart') ||
-          assetId.path.contains('.dire_di.dart') ||
-          assetId.path.contains('.freezed.dart') ||
-          assetId.path.contains('.config.dart') ||
-          assetId.path.contains('.chopper.dart') ||
-          assetId.path.contains('.gr.dart') ||
-          assetId.path.contains('.mocks.dart')) {
+      // Skip generated files and part files - comprehensive list
+      if (_shouldSkipFile(assetId.path)) {
+        log.fine('Skipping file based on path pattern: ${assetId.path}');
         return;
       }
 
-      // Check if this is a part file by reading the first few lines
+      // Read file content to perform additional checks
       final content = await buildStep.readAsString(assetId);
-      final lines = content.split('\n').take(10).toList();
 
-      // Skip if it's a part file (starts with 'part of' or contains only 'part' statements)
-      for (final line in lines) {
-        final trimmed = line.trim();
-        if (trimmed.startsWith('part of ') ||
-            (trimmed.startsWith('part ') && trimmed.endsWith('.dart\';'))) {
-          log.fine('Skipping part file: ${assetId.path}');
-          return;
-        }
+      // Skip if this is a part file or doesn't contain proper library declarations
+      if (_isPartFileOrInvalidLibrary(content)) {
+        log.fine('Skipping part file or invalid library: ${assetId.path}');
+        return;
       }
 
       log.fine('Processing file: ${assetId.path}');
@@ -750,5 +740,74 @@ class DireDiAggregatingBuilder implements Builder {
     };
 
     return frameworkInterfaces.contains(interfaceName);
+  }
+
+  /// Determines if a file should be skipped based on its path
+  bool _shouldSkipFile(String path) {
+    // Skip generated files
+    final generatedFilePatterns = [
+      '.g.dart',
+      '.dire_di.dart',
+      '.freezed.dart',
+      '.config.dart',
+      '.chopper.dart',
+      '.gr.dart',
+      '.mocks.dart',
+      '.part.dart',
+    ];
+
+    for (final pattern in generatedFilePatterns) {
+      if (path.contains(pattern)) {
+        return true;
+      }
+    }
+
+    // Skip common BLoC state/event files that are typically part files
+    if (path.contains('_state.dart') || path.contains('_event.dart')) {
+      return true;
+    }
+
+    // Skip files in build directories
+    if (path.contains('/build/') || path.contains('\\build\\')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Checks if the file content indicates it's a part file or invalid library
+  bool _isPartFileOrInvalidLibrary(String content) {
+    final lines =
+        content.split('\n').take(20).map((line) => line.trim()).toList();
+
+    // Check for part files
+    for (final line in lines) {
+      // Skip empty lines and comments
+      if (line.isEmpty || line.startsWith('//') || line.startsWith('/*')) {
+        continue;
+      }
+
+      // Check for part directives
+      if (line.startsWith('part of ') ||
+          (line.startsWith('part ') && line.contains('.dart'))) {
+        return true;
+      }
+
+      // If we encounter an import, library, or class declaration, it's likely a proper library
+      if (line.startsWith('import ') ||
+          line.startsWith('export ') ||
+          line.startsWith('library ') ||
+          line.startsWith('class ') ||
+          line.startsWith('abstract ') ||
+          line.startsWith('mixin ') ||
+          line.startsWith('enum ') ||
+          line.startsWith('typedef ') ||
+          line.startsWith('extension ')) {
+        return false;
+      }
+    }
+
+    // If we can't determine from the content, assume it's valid
+    return false;
   }
 }

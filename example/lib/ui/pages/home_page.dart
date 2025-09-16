@@ -4,8 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../app_module.dire_di.dart';
 import '../../bloc/user_bloc.dart';
-import '../../bloc/user_event.dart';
-import '../../bloc/user_state.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

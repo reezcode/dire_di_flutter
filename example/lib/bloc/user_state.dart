@@ -1,4 +1,4 @@
-import 'package:equatable/equatable.dart';
+part of 'user_bloc.dart';
 
 enum UserStateStatus { initial, loading, loaded, error }
 

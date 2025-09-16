@@ -1,6 +1,6 @@
+import 'package:dire_di_example/bloc/user_bloc.dart';
 import 'package:dire_di_flutter/dire_di.dart';
 
-import '../bloc/user_state.dart';
 import '../datasources/user_datasources.dart';
 import '../services/database_service.dart';
 import 'user_repository.dart';

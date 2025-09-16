@@ -17,6 +17,13 @@ targets:
             - "**/*.mocks.dart"
             - "**/*.part.dart"
             - "**/build/**"
+            - "**/*_state.dart"
+            - "**/*_event.dart"
+            - "**/bloc/**_state.dart"
+            - "**/bloc/**_event.dart"
+            - "**/models/*.g.dart"
+            - "**/models/*.freezed.dart"
+            - "**/config/*.g.dart"
 
 builders:
   # Main builder (mirrors-free, recommended)

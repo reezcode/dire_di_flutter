@@ -1,4 +1,4 @@
-import '../bloc/user_state.dart';
+import '../bloc/user_bloc.dart';
 
 abstract class UserRepository {
   void findUser(String id);

@@ -1,9 +1,11 @@
 import 'package:dire_di_flutter/dire_di.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../repositories/user_repository.dart';
-import 'user_event.dart';
-import 'user_state.dart';
+
+part 'user_event.dart';
+part 'user_state.dart';
 
 @Controller()
 class UserBloc extends Bloc<UserEvent, UserState> {

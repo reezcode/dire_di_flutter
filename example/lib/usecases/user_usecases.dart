@@ -1,6 +1,6 @@
 import 'package:dire_di_flutter/dire_di.dart';
 
-import '../bloc/user_state.dart';
+import '../bloc/user_bloc.dart';
 import '../repositories/user_repository.dart';
 
 @UseCase()

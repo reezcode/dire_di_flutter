@@ -1,3 +1,13 @@
+## 2.5.0
+
+- Added support for BLoC patterns with part files. The generator now properly handles files using `part of` directives while still allowing main BLoC classes to use dependency injection.
+- Improved file filtering to automatically skip generated files (.g.dart, .freezed.dart) and part files during code generation, preventing build errors.
+- Enhanced compatibility with AutoRoute by making navigation services injectable through the DI container.
+- Fixed "Asset is not a Dart library" errors that occurred when processing part files in larger Flutter projects.
+- Better error handling and cleaner build output with reduced warnings.
+
+---
+
 ## 2.4.3
 
 - **New Annotations**: Added new DataSource and UseCase annotation

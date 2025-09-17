@@ -4,17 +4,20 @@ A Spring-like dependency injection framework for Dart and Flutter with code gene
 
 ## Features
 
-- **Spring-like Annotations**: `@Service`, `@Repository`, `@Component`, `@Controller`
+- **Spring-like Annotations**: `@Service`, `@Repository`, `@Component`, `@Controller`, `@DataSource`, `@UseCase`
 - **Constructor Injection**: Modern dependency injection via constructors (recommended)
 - **Code Generation**: Flutter-compatible using build_runner instead of dart:mirrors
 - **Consolidated Generation**: `@DireDiEntryPoint` for single-file registration
 - **Multi-File Support**: Components spread across multiple files automatically discovered
-- **Flutter Mixin**: Easy integration with StatefulWidget via `DireDiMixin`
+- **BLoC Pattern Support**: Full compatibility with part files for state management
+- **AutoRoute Integration**: Built-in router service for type-safe navigation
+- **Flutter Mixin**: Easy integration with StatefulWidget via `DiCore` and `DiMixin`
 - **Qualifier Support**: Use named instances for specific bean selection
 - **Singleton and Prototype Scopes**: Control object lifecycle
 - **Conditional Registration**: `@ConditionalOnProperty`, `@ConditionalOnClass`
 - **Profile Support**: `@Profile` for environment-specific beans
 - **Configuration Classes**: `@Configuration` and `@Bean` for manual setup
+- **Smart File Processing**: Automatic filtering of generated and part files
 
 ## Installation
 
@@ -22,7 +25,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  dire_di_flutter: ^2.4.0
+  dire_di_flutter: ^2.5.0
 
 dev_dependencies:
   build_runner: ^2.4.13
@@ -479,96 +482,165 @@ container.registerGeneratedDependencies(); // ✅ Works everywhere
 
 ## Advanced Usage
 
+### BLoC with Part Files
+
+The framework supports BLoC patterns that use part files for states and events:
+
+```dart
+// user_bloc.dart - Main file with DI annotation
+@Controller()
+class UserBloc extends Bloc<UserEvent, UserState> {
+  @Autowired()
+  final UserRepository userRepository;
+
+  UserBloc({required this.userRepository}) : super(UserInitial());
+}
+
+// user_state.dart - Part file (automatically skipped)
+part of 'user_bloc.dart';
+
+class UserState {}
+
+// user_event.dart - Part file (automatically skipped)
+part of 'user_bloc.dart';
+
+class UserEvent {}
+```
+
+### AutoRoute Integration
+
+Make navigation services injectable:
+
+```dart
+@Service()
+class RouterService {
+  final AppRouter _router = AppRouter();
+
+  AppRouter get router => _router;
+
+  void navigateToHome() => _router.push(const HomeRoute());
+}
+```
+
 ### Qualifiers
 
-When you have multiple implementations of the same interface:
+When you have multiple implementations:
 
 ```dart
 @Service()
 @Qualifier('primary')
-class PrimaryUserService implements UserService {
-  // Implementation
-}
+class PrimaryUserService implements UserService {}
 
 @Service()
 @Qualifier('secondary')
-class SecondaryUserService implements UserService {
-  // Implementation
-}
+class SecondaryUserService implements UserService {}
 
-@Component()
-class UserController {
-  @Autowired()
-  @Qualifier('primary')
-  UserService? userService;
-}
+// Inject specific implementation
+@Autowired()
+@Qualifier('primary')
+UserService primaryService;
 ```
 
 ### Configuration Classes
 
-For complex bean setup:
-
 ```dart
 @Configuration()
-class DatabaseConfig {
+class AppConfig {
   @Bean()
-  @Singleton()
   Database createDatabase() {
-    return Database(connectionString: Environment.dbUrl);
-  }
-
-  @Bean()
-  @Qualifier('cache')
-  Cache createCache() {
-    return RedisCache();
+    return Database(connectionString: 'sqlite://app.db');
   }
 }
 ```
 
 ### Profiles
 
-Environment-specific configurations:
-
 ```dart
 @Service()
 @Profile('development')
-class DevEmailService implements EmailService {
-  void sendEmail(String to, String subject, String body) {
-    print('DEV: Sending email to $to: $subject');
-  }
-}
+class DevEmailService implements EmailService {}
 
 @Service()
 @Profile('production')
-class ProdEmailService implements EmailService {
-  void sendEmail(String to, String subject, String body) {
-    // Real email sending logic
-  }
-}
-
-// Set active profiles
-final container = DireContainer(activeProfiles: ['development']);
+class ProdEmailService implements EmailService {}
 ```
 
-### Conditional Beans
+// Only registered if sqflite package is available
+}
 
-Register beans based on conditions:
+````
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+#### 1. Build Errors with Part Files
+
+**Problem**: Getting "Asset is not a Dart library" errors during build.
+
+**Solution**: Dire DI automatically excludes part files and generated files. Ensure your part files are properly declared:
 
 ```dart
-@Service()
-@ConditionalOnProperty(
-  name: 'feature.email.enabled',
-  havingValue: 'true'
-)
-class EmailService {
-  // Only registered if feature.email.enabled=true
+// ✅ Correct - Part file properly excluded
+part of 'user_bloc.dart';
+
+// ❌ Incorrect - Missing part declaration
+// This file will be processed and may cause errors
+````
+
+#### 2. BLoC with Part Files Not Injecting
+
+**Problem**: BLoC using part files for states/events isn't being registered.
+
+**Solution**: Keep DI annotations in the main BLoC file, not part files:
+
+```dart
+// user_bloc.dart - Main file with DI annotations
+@Controller()  // ✅ Annotation here
+class UserBloc extends Bloc<UserEvent, UserState> {
+  @Autowired()
+  final UserRepository repository;
 }
 
+// user_state.dart - Part file (no annotations needed)
+part of 'user_bloc.dart';
+// ✅ Just part file content, no DI annotations
+```
+
+#### 3. Generated Files Causing Build Issues
+
+**Problem**: Code generation conflicts with Dire DI processing.
+
+**Solution**: Run build commands in the correct order:
+
+```bash
+# Clean first
+flutter packages pub run build_runner clean
+
+# Generate Dire DI files
+flutter packages pub run build_runner build --filter="dire_di"
+
+# Then generate other files (freezed, json, etc.)
+flutter packages pub run build_runner build
+```
+
+#### 4. AutoRoute Not Working with DI
+
+**Problem**: Navigation not working after DI integration.
+
+**Solution**: Ensure RouterService is properly configured and injected:
+
+```dart
+// ✅ Register RouterService as singleton
 @Service()
-@ConditionalOnClass('package:sqflite/sqflite.dart')
-class SQLiteUserRepository implements UserRepository {
-  // Only registered if sqflite package is available
+class RouterService {
+  static final _instance = AppRouter();
+  AppRouter get router => _instance;
 }
+
+// ✅ Use RouterService in MaterialApp
+final routerService = get<RouterService>();
+MaterialApp.router(routerConfig: routerService.router.config())
 ```
 
 ## Important Note about Field Types
@@ -588,6 +660,7 @@ class MyService {
 class MyService {
   @Autowired()
   UserRepository? repository;
+}
 }
 ```
 
@@ -676,21 +749,72 @@ container.registerInstance<UserService>(userServiceInstance);
 ## Best Practices
 
 1. **Use Specific Annotations**: Prefer `@Service`, `@Repository` over generic `@Component`
-2. **Qualify Multiple Implementations**: Use `@Qualifier` when you have multiple beans of same type
-3. **Profile Organization**: Group environment-specific beans with `@Profile`
-4. **Lazy Initialization**: Use prototype scope for heavy objects when appropriate
-5. **Constructor vs Field Injection**: Field injection is simpler, constructor injection is more testable
 
-## Limitations
+## Troubleshooting
 
-1. **Mirrors Dependency**: Requires dart:mirrors (not available in Flutter web)
-2. **Runtime Overhead**: Reflection has performance cost compared to code generation
-3. **Tree Shaking**: May prevent dead code elimination in some cases
+### Part Files Build Errors
+
+If you get "Asset is not a Dart library" errors, ensure part files have proper declarations:
+
+```dart
+part of 'user_bloc.dart'; // Required at top of part files
+```
+
+### BLoC Not Being Injected
+
+Keep DI annotations in the main BLoC file, not in part files:
+
+```dart
+@Controller() // In main user_bloc.dart file
+class UserBloc extends Bloc<UserEvent, UserState> {}
+```
+
+### Build Order Issues
+
+Run code generation in this order:
+
+```bash
+flutter packages pub run build_runner clean
+flutter packages pub run build_runner build --filter="dire_di"
+flutter packages pub run build_runner build
+```
+
+## API Reference
+
+### Core Annotations
+
+- `@Component()` - Base component
+- `@Service()` - Service layer
+- `@Repository()` - Data access layer
+- `@Controller()` - Presentation layer
+- `@Autowired()` - Dependency injection
+- `@Qualifier(name)` - Bean qualification
+- `@Singleton()` - Single instance
+- `@Configuration()` - Config classes
+- `@Bean()` - Factory methods
+
+### Container Methods
+
+```dart
+final container = DireContainer();
+await container.scan();
+
+final service = container.get<UserService>();
+bool exists = container.contains<UserService>();
+container.register<UserService>(() => UserService());
+```
+
+## Best Practices
+
+1. Use specific annotations like `@Service`, `@Repository` over `@Component`
+2. Add `@Qualifier` when you have multiple implementations
+3. Use `@Profile` for environment-specific configurations
+4. Avoid `late` fields, use nullable fields for DI
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions welcome! Please submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License - see LICENSE file for details.

@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:dire_di_flutter/dire_di.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../app_module.dire_di.dart';
 import '../../bloc/user_bloc.dart';
 
+@RoutePage()
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -33,61 +35,9 @@ class _HomePageState extends State<HomePage> with DiCore, DiMixin {
         child: const UserListView(),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddUserDialog(context),
+        onPressed: () => routerService.navigateToCreateUser(),
         backgroundColor: Colors.blue,
         child: const Icon(Icons.add, color: Colors.white),
-      ),
-    );
-  }
-
-  void _showAddUserDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    final emailController = TextEditingController();
-
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add New User'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.isNotEmpty &&
-                  emailController.text.isNotEmpty) {
-                userBloc.add(CreateUserEvent(
-                  name: nameController.text.trim(),
-                  email: emailController.text.trim(),
-                ));
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
       ),
     );
   }
@@ -176,6 +126,7 @@ class UserListView extends StatelessWidget with DiCore, DiMixin {
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () => _showDeleteConfirmation(context, user),
                       ),
+                      onTap: () => routerService.navigateToUserDetails(user.id),
                     ),
                   );
                 },

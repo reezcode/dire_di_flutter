@@ -299,46 +299,6 @@ class _MyWidgetState extends State<MyWidget> with DiCore, DiMixin {
 }
 ```
 
-class \_HomePageState extends State<HomePage> with DireDiMixin {
-String? currentUser;
-bool isLoading = true;
-
-@override
-void initState() {
-super.initState();
-\_loadData();
-}
-
-Future<void> \_loadData() async {
-try {
-// Get dependencies asynchronously (auto-initializes if needed)
-final userService = await getAsync<UserService>();
-
-      setState(() {
-        currentUser = userService.getCurrentUser();
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-    }
-
-}
-
-@override
-Widget build(BuildContext context) {
-return Scaffold(
-appBar: AppBar(title: Text('User Info')),
-body: isLoading
-? CircularProgressIndicator()
-: Text('Current User: $currentUser'),
-);
-}
-}
-
-````
-
 ### Mixin API
 
 ```dart
@@ -360,7 +320,7 @@ await register<ApiClient>(() => ApiClient(baseUrl: 'https://api.example.com'));
 // Container management
 await DireDiMixin.initialize(); // Pre-initialize
 DireDiMixin.reset(); // Reset for testing
-````
+```
 
 ### Benefits of DireDiMixin
 
@@ -643,27 +603,6 @@ final routerService = get<RouterService>();
 MaterialApp.router(routerConfig: routerService.router.config())
 ```
 
-## Important Note about Field Types
-
-Due to Dart's mirror system limitations, `late` fields may not work properly with dependency injection. Use nullable fields instead:
-
-```dart
-// ❌ Problematic with mirrors
-@Service()
-class MyService {
-  @Autowired()
-  late UserRepository repository;
-}
-
-// ✅ Recommended approach
-@Service()
-class MyService {
-  @Autowired()
-  UserRepository? repository;
-}
-}
-```
-
 ## Comparison with Other DI Solutions
 
 ### vs get_it + injectable
@@ -677,12 +616,11 @@ class UserService {
   final UserRepository userRepository;
 }
 
-// Requires build_runner
-// No field injection
-// Manual registration often needed
+// Need manual to direct access
+// Hard to read
 ```
 
-**dire_di:**
+**dire_di_flutter:**
 
 ```dart
 @Service()
@@ -691,64 +629,18 @@ class UserService {
   late UserRepository userRepository; // Field injection!
 }
 
-// No build_runner needed
+// Direct access via mixin
 // Spring-like annotations
-// Auto-discovery with reflection
 ```
 
 ### Key Advantages
 
-1. **No Code Generation**: Uses mirrors for runtime reflection
-2. **Field Injection**: Direct field injection like Spring
-3. **Auto-Discovery**: Automatic component scanning
-4. **Spring Familiarity**: Same annotations as Spring Framework
-5. **Rich Conditional Support**: Extensive conditional registration
-6. **Profile Management**: Environment-specific configurations
-
-## API Reference
-
-### Annotations
-
-- `@Component()` - Base component annotation
-- `@Service()` - Service layer components
-- `@Repository()` - Data access layer components
-- `@Controller()` - Presentation layer components
-- `@Configuration()` - Configuration classes
-- `@Bean()` - Bean factory methods
-- `@Autowired()` - Dependency injection marker
-- `@Qualifier(name)` - Bean qualification
-- `@Singleton()` - Singleton scope
-- `@Prototype()` - Prototype scope
-- `@Profile(profiles)` - Profile-specific beans
-- `@ConditionalOnProperty()` - Property-based conditions
-- `@ConditionalOnClass()` - Class-based conditions
-
-### Container Methods
-
-```dart
-final container = DireContainer();
-
-// Initialize
-await container.scan();
-
-// Get beans
-final service = container.get<UserService>();
-final qualifiedService = container.get<UserService>('qualifier');
-
-// Check existence
-bool exists = container.contains<UserService>();
-
-// Get all instances
-List<UserService> services = container.getAll<UserService>();
-
-// Manual registration
-container.register<UserService>(() => UserService());
-container.registerInstance<UserService>(userServiceInstance);
-```
-
-## Best Practices
-
-1. **Use Specific Annotations**: Prefer `@Service`, `@Repository` over generic `@Component`
+1. Spring-like field injection with @Autowired annotation
+2. Code generation for mobile platform compatibility (no dart:mirrors at runtime)
+3. Automatic component scanning and discovery
+4. Spring-familiar annotations (@Service, @Repository, @Controller)
+5. Rich conditional and profile support
+6. Flutter integration via DiCore and DiMixin
 
 ## Troubleshooting
 
@@ -787,6 +679,8 @@ flutter packages pub run build_runner build
 - `@Service()` - Service layer
 - `@Repository()` - Data access layer
 - `@Controller()` - Presentation layer
+- `@DataSource()` - Data source layer
+- `@UseCase()` - Use case layer
 - `@Autowired()` - Dependency injection
 - `@Qualifier(name)` - Bean qualification
 - `@Singleton()` - Single instance
@@ -809,7 +703,8 @@ container.register<UserService>(() => UserService());
 1. Use specific annotations like `@Service`, `@Repository` over `@Component`
 2. Add `@Qualifier` when you have multiple implementations
 3. Use `@Profile` for environment-specific configurations
-4. Avoid `late` fields, use nullable fields for DI
+4. Use constructor injection when possible, field injection with @Autowired for convenience
+5. Pre-initialize DI container in main() for Flutter apps
 
 ## Contributing
 
